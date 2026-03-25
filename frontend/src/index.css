@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply transition-colors duration-200;
+}
+
+body {
+  @apply bg-catia-dark text-catia-light;
+}
+
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-catia-dark/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-catia-purple/50 rounded-full hover:bg-catia-purple/70;
+}

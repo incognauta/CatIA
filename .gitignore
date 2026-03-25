@@ -1,0 +1,150 @@
+# ============================================================================
+# IDE & EDITOR
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.prettierignore
+
+# ============================================================================
+# PYTHON & DJANGO (Backend)
+# ============================================================================
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+.venv/
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+*.egg
+.Python
+
+# Django
+*.log
+*.pot
+/backend/media/
+/backend/staticfiles/
+/data/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ============================================================================
+# NODE & FRONTEND (React/Vite)
+# ============================================================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Build outputs
+/frontend/dist/
+/frontend/build/
+.next/
+out/
+
+# Vite specific
+.vite/
+
+# ============================================================================
+# ENVIRONMENT & SECRETS
+# ============================================================================
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.secret
+*.key
+*.pem
+secrets.json
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+docker-compose.override.yml
+.dockerignore
+
+# ============================================================================
+# DATABASE & UPLOADS
+# ============================================================================
+/uploads/
+/media/
+*.db
+
+# ============================================================================
+# OS FILES
+# ============================================================================
+Thumbs.db
+ehthumbs.db
+._*
+.Spotlight-V100
+.Trashes
+
+# ============================================================================
+# PROJECT SPECIFIC
+# ============================================================================
+# Temporary files
+*.tmp
+*.temp
+/temp/
+/tmp/
+
+# Large files
+*.zip
+*.rar
+*.tar.gz
+*.7z
+
+# IDE plugins cache
+.pylint.d/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================================================
+# LLM & AI RELATED
+# ============================================================================
+# Groq API keys, embeddings cache
+/notebooks/embeddings/
+/data/embeddings/
+embeddings_cache/
+ai_logs/
+llm_cache/
+
+# ============================================================================
+# TESTS & COVERAGE
+# ============================================================================
+coverage.xml
+.pytest_cache/
+htmlcov/
+
+# ============================================================================
+# GENERATED FILES (DO NOT COMMIT)
+# ============================================================================
+dist/
+build/
+*.egg-info/

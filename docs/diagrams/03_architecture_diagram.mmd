@@ -1,0 +1,76 @@
+graph TB
+    subgraph Frontend["🖥️ FRONTEND - React 19 + Vite"]
+        A1["📱 UI Components"]
+        A2["🎨 TailwindCSS"]
+        A3["📍 React Router"]
+        A4["🔀 Zustand Store"]
+        A5["🌐 Axios Client"]
+        
+        A1 --> A2
+        A1 --> A3
+        A3 --> A4
+        A4 --> A5
+    end
+    
+    subgraph API["🔌 REST API - Django DRF"]
+        B1["🔐 Auth Endpoints"]
+        B2["📓 Notebook Endpoints"]
+        B3["💬 Chat Endpoints"]
+        B4["📄 Document Endpoints"]
+        B5["🔄 Middleware JWT"]
+        
+        B1 --> B5
+        B2 --> B5
+        B3 --> B5
+        B4 --> B5
+    end
+    
+    subgraph Backend["⚙️ BACKEND - Django 5.0"]
+        C1["📊 Models"]
+        C2["🎬 Views/Serializers"]
+        C3["🧪 Business Logic"]
+        C4["🔌 External APIs"]
+        
+        C1 --> C2
+        C2 --> C3
+        C3 --> C4
+    end
+    
+    subgraph Database["🗄️ DATABASE - PostgreSQL 15"]
+        D1["👤 Users"]
+        D2["📓 Notebooks"]
+        D3["📄 Documents"]
+        D4["💬 ChatMessages"]
+        D5["📊 Interactions"]
+        
+        D1 -.relates_to.-> D2
+        D2 -.contains.-> D3
+        D1 -.sends.-> D4
+        D1 -.performs.-> D5
+    end
+    
+    subgraph External["🌐 EXTERNAL SERVICES"]
+        E1["🤖 Groq API"]
+        E2["📧 Email Service"]
+        E3["💳 Stripe"]
+        
+        E1 -->|llama-3.1-8b| C4
+    end
+    
+    Frontend -->|HTTP/REST| API
+    API --> Backend
+    Backend --> Database
+    Backend --> External
+    
+    subgraph Infrastructure["🐳 INFRASTRUCTURE"]
+        F1["🐳 Docker"]
+        F2["🔗 Docker Compose"]
+        F3["📦 nginx Reverse Proxy"]
+        
+        F1 --> F2
+        F2 --> F3
+    end
+    
+    Infrastructure -.deploys.-> Frontend
+    Infrastructure -.deploys.-> Backend
+    Infrastructure -.deploys.-> Database

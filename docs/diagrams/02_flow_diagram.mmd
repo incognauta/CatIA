@@ -1,0 +1,34 @@
+flowchart TD
+    A["👤 Nuevo Usuario"] --> B{¿Tiene Cuenta?}
+    B -->|No| C["📝 Registro"]
+    B -->|Sí| D["🔑 Login"]
+    
+    C --> E["✅ Email Verificado"]
+    D --> E
+    
+    E --> F["📓 Dashboard"]
+    F --> G{Acción?}
+    
+    G -->|Crear| H["📚 Nuevo Notebook"]
+    G -->|Seleccionar| I["🎯 Abrir Notebook"]
+    
+    H --> I
+    I --> J{¿Siguiente?}
+    
+    J -->|Subir Doc| K["📄 Upload Document"]
+    K --> L["✅ Documento Guardado"]
+    L --> M["💬 Chat Disponible"]
+    
+    J -->|Chat| M
+    M --> N["🤖 Enviar Pregunta"]
+    N --> O["🔄 API → Groq"]
+    O --> P["💭 Respuesta IA"]
+    P --> Q["💾 Guardar en BD"]
+    Q --> M
+    
+    J -->|Editar| R["✏️ Markdown Editor"]
+    R --> S["💾 Auto-save"]
+    S --> I
+    
+    Q --> T["📊 Volver Dashboard"]
+    T --> F

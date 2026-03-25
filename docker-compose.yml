@@ -1,0 +1,29 @@
+services:
+  db:
+    image: pgvector/pgvector:pg15
+    container_name: pdf_ia_rework_db
+    environment:
+      POSTGRES_DB: pdf_ia_rework_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: pdf_ia_rework_backend
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres123@db:5432/pdf_ia_rework_db
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
