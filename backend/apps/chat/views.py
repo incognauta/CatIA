@@ -1,11 +1,13 @@
+import logging
+
+from django.db.models import Q
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Q
+
 from .models import ChatMessage
 from .serializers import ChatMessageSerializer, ChatMessageCreateSerializer, ChatHistorySerializer
 from apps.core.llm_service import get_groq_service, LLMServiceError
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -127,13 +129,27 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
             )
         
         # Obtener servicio Groq
-        llm_service = get_groq_service()
-        if not llm_service:
-            logger.warning("Groq não disponible, retornando error")
+        try:
+            llm_service = get_groq_service()
+        except LLMServiceError as e:
+            logger.warning(f"Groq no disponible: {e}")
             return Response(
                 {'error': 'Servicio de IA no disponible'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
+        
+        # Obtener configuración personalizada del usuario (Fase 6: settings de usuario)
+        try:
+            from apps.core.models import UserLLMSettings
+            user_settings, _ = UserLLMSettings.get_or_create_for_user(request.user)
+            model_override = user_settings.model
+            temperature_override = user_settings.temperature
+            max_tokens_override = user_settings.max_tokens
+        except Exception as e:
+            logger.warning(f"Error obteniendo configuración LLM del usuario: {e}")
+            model_override = None
+            temperature_override = None
+            max_tokens_override = None
         
         try:
             # 1. Buscar documentos relevantes (RAG)
@@ -167,13 +183,16 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
                 for msg in reversed(prev_messages)
             ]
             
-            # 3. Llamar Groq
+            # 3. Llamar Groq con configuración personalizada del usuario
             groq_response = llm_service.generate_response(
                 user_message=message,
                 system_prompt=system_prompt,
                 context_documents=context_docs,
                 conversation_history=conversation_history,
-                notebook_id=str(notebook_id)
+                notebook_id=str(notebook_id),
+                model_override=model_override,
+                temperature_override=temperature_override,
+                max_tokens_override=max_tokens_override,
             )
             
             # 4. Guardar mensaje del usuario

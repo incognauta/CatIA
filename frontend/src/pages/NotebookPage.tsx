@@ -5,9 +5,10 @@ import { useChat } from '@hooks/useChat'
 import { useDocuments } from '@hooks/useDocuments'
 import { useUIStore } from '@stores/uiStore'
 import { useNotebookContentStore } from '@stores/notebookStore'
-import { ArrowLeft, FileCode, MessageCircle } from 'lucide-react'
+import { ArrowLeft, FileCode, MessageCircle, Settings } from 'lucide-react'
 import NotebookCanvas from '@components/notebook/NotebookCanvas'
 import ChatSidebar from '@components/chat/ChatSidebar'
+import { ChatSettings } from '@components/chat/ChatSettings'
 import DocumentsModal from '@components/documents/DocumentsModal'
 
 export default function NotebookPage() {
@@ -23,6 +24,7 @@ export default function NotebookPage() {
   const setNotebookContent = useNotebookContentStore((state) => state.setContent)
   
   const [localContent, setLocalContent] = useState(content)
+  const [showSettings, setShowSettings] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load content from persistent store when notebookId changes
@@ -82,10 +84,13 @@ export default function NotebookPage() {
             <span className="text-sm">{documents.length} docs</span>
           </button>
           <button 
-            onClick={() => navigate('/coming-soon')}
-            className="p-2 hover:bg-catia-purple/20 rounded-lg transition-colors"
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-2 hover:bg-catia-purple/20 rounded-lg transition-colors ${
+              showSettings ? 'bg-catia-purple/30 text-catia-purple' : 'text-catia-light/70'
+            }`}
+            title="Configuración LLM"
           >
-            <MessageCircle className="w-5 h-5 text-catia-light/70" />
+            <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -95,13 +100,17 @@ export default function NotebookPage() {
         {/* Canvas */}
         <NotebookCanvas content={localContent} onChange={handleContentChange} />
 
-        {/* Chat Sidebar */}
-        <ChatSidebar
-          messages={messages}
-          onSendMessage={sendMessage}
-          isSending={isSending}
-          contextDocs={documents.length}
-        />
+        {/* Chat Sidebar or Settings */}
+        {showSettings ? (
+          <ChatSettings />
+        ) : (
+          <ChatSidebar
+            messages={messages}
+            onSendMessage={sendMessage}
+            isSending={isSending}
+            contextDocs={documents.length}
+          />
+        )}
       </div>
 
       {/* Documents Modal */}

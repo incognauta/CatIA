@@ -129,13 +129,13 @@ class GroqServiceTestCase(TestCase):
     
     def test_groq_service_creation(self):
         """Intentar crear GroqService (fallará sin API key válida)"""
-        # Sin API key, debería lanzar LLMServiceError
+        # Sin API key válida, debería lanzar LLMServiceError
         # Esto es un test que verifica el manejo de errores
         try:
             from unittest.mock import patch
             
-            # Simular que GROQ_API_KEY está vacío
-            with patch('apps.core.llm_service.GROQ_API_KEY', ''):
+            # Simular que GROQ_CONFIG tiene API_KEY vacía
+            with patch('apps.core.llm_service.GROQ_CONFIG', {'API_KEY': '', 'MODEL': 'llama-3.1-8b-instant', 'MAX_TOKENS': 1024, 'TEMPERATURE': 0.7}):
                 with self.assertRaises(LLMServiceError):
                     GroqService()
         except ImportError:

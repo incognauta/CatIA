@@ -3,8 +3,11 @@ LLM Service: Groq API integration + RAG (Retrieval Augmented Generation)
 Fase 4C
 """
 import logging
-from typing import List, Dict, Optional
-from decouple import config
+import re
+from functools import lru_cache
+from typing import List, Dict, Optional, Tuple
+
+from django.conf import settings
 
 try:
     from groq import Groq
@@ -13,10 +16,104 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Configuración
-GROQ_API_KEY = config('GROQ_API_KEY', default='')
-GROQ_MODEL = 'llama-3.1-8b-instant'
-MAX_TOKENS = 1024
+# Configuración desde settings (Fase 6: Mejora)
+GROQ_CONFIG = settings.GROQ_CONFIG
+DOCUMENT_CONFIG = settings.DOCUMENT_CONFIG
+
+
+class LLMServiceError(Exception):
+    """Error en servicio LLM"""
+    pass
+
+
+# ═══════════════════════════════════════════════════════════
+# Utilidades de Chunking e Indexación (Fase 6: Mejora STEP 3)
+# ═══════════════════════════════════════════════════════════
+
+def split_into_chunks(
+    text: str,
+    chunk_size: int = None,
+    overlap: int = None,
+) -> List[str]:
+    """
+    Dividir texto en chunks con overlap para RAG.
+    
+    Args:
+        text: Texto a dividir
+        chunk_size: Tamaño del chunk (default: DOCUMENT_CONFIG)
+        overlap: Caracteres de solapamiento entre chunks
+    
+    Returns:
+        Lista de chunks
+    """
+    if chunk_size is None:
+        chunk_size = DOCUMENT_CONFIG["CHUNK_SIZE"]
+    if overlap is None:
+        overlap = DOCUMENT_CONFIG["CHUNK_OVERLAP"]
+    
+    if len(text) <= chunk_size:
+        return [text]
+    
+    chunks = []
+    step = chunk_size - overlap
+    
+    for i in range(0, len(text), step):
+        chunk = text[i : i + chunk_size]
+        if chunk.strip():  # Solo agregar si no está vacío
+            chunks.append(chunk)
+    
+    return chunks
+
+
+def find_relevant_chunks(
+    chunks: List[str],
+    query: str,
+    top_k: int = 3,
+) -> List[Tuple[str, float]]:
+    """
+    Encontrar chunks relevantes a la query usando búsqueda de keywords.
+    
+    Implementación simple sin embeddings (para evitar overhead).
+    Usa: frecuencia de keywords, posición en documento, longitud.
+    
+    Args:
+        chunks: Lista de chunks del documento
+        query: Query del usuario
+        top_k: Número de chunks a retornar
+    
+    Returns:
+        Lista de tuplas (chunk, score) ordenadas por relevancia
+    """
+    # Normalizar query
+    query_words = set(re.findall(r'\b\w+\b', query.lower()))
+    
+    if not query_words:
+        # Si no hay keywords, retornar primeros chunks (inicio del documento)
+        return [(chunk, 1.0) for chunk in chunks[:top_k]]
+    
+    scored_chunks = []
+    
+    for i, chunk in enumerate(chunks):
+        chunk_words = set(re.findall(r'\b\w+\b', chunk.lower()))
+        
+        # Score basado en:
+        # 1. Coincidencia de keywords
+        matches = len(query_words & chunk_words)
+        keyword_score = matches / len(query_words) if query_words else 0
+        
+        # 2. Posición (primeros chunks más relevantes)
+        position_score = 1.0 - (i / max(len(chunks), 1)) * 0.3
+        
+        # 3. Longitud (chunks más largos = más info)
+        length_score = min(len(chunk) / 1000, 1.0) * 0.2
+        
+        # Score combinado (ponderado)
+        total_score = (keyword_score * 0.6) + (position_score * 0.2) + (length_score * 0.2)
+        scored_chunks.append((chunk, total_score))
+    
+    # Ordenar por score y retornar top_k
+    scored_chunks.sort(key=lambda x: x[1], reverse=True)
+    return scored_chunks[:top_k]
 
 
 class LLMServiceError(Exception):
@@ -29,23 +126,36 @@ class GroqService:
     
     def __init__(self):
         """Inicializar cliente Groq"""
-        if not GROQ_API_KEY:
-            raise LLMServiceError("GROQ_API_KEY no configurada en .env")
+        api_key = GROQ_CONFIG.get('API_KEY', '')
+        if not api_key:
+            raise LLMServiceError("GROQ_API_KEY no configurada en settings")
         
         if Groq is None:
             raise LLMServiceError("groq no instalado. Instala: pip install groq")
         
-        self.client = Groq(api_key=GROQ_API_KEY)
-        self.model = GROQ_MODEL
+        self.client = Groq(api_key=api_key)
+        self.model = GROQ_CONFIG.get('MODEL', 'llama-3.1-8b-instant')
+        self.max_tokens = GROQ_CONFIG.get('MAX_TOKENS', 1024)
+        self.temperature = GROQ_CONFIG.get('TEMPERATURE', 0.7)
     
     @staticmethod
-    def build_rag_context(documents: List[Dict], max_chars: int = 3000) -> str:
+    def build_rag_context(
+        documents: List[Dict],
+        query: Optional[str] = None,
+        max_chars: Optional[int] = None,
+    ) -> str:
         """
-        Construir contexto RAG a partir de documentos relevantes
+        Construir contexto RAG a partir de documentos relevantes.
+        
+        Implementación mejorada (Fase 6 STEP 3):
+        - Chunking inteligente con overlap
+        - Búsqueda semántica de fragmentos relevantes
+        - Límites configurables por documento y total
         
         Args:
             documents: Lista de dicts con 'title' y 'content'
-            max_chars: Máximo de caracteres del contexto
+            query: Query del usuario (para búsqueda de relevancia)
+            max_chars: Máximo de caracteres (default: DOCUMENT_CONFIG)
         
         Returns:
             String con contexto formateado
@@ -53,21 +163,61 @@ class GroqService:
         if not documents:
             return ""
         
+        if max_chars is None:
+            max_chars = DOCUMENT_CONFIG["MAX_CHARS_TOTAL"]
+        
+        max_per_doc = DOCUMENT_CONFIG["MAX_CHARS_PER_DOCUMENT"]
+        enable_semantic = DOCUMENT_CONFIG["ENABLE_SEMANTIC_SEARCH"]
+        
         context_parts = []
         total_chars = 0
         
         for doc in documents:
             title = doc.get('title', 'Documento sin título')
-            content = doc.get('content', '')[:500]  # Limitar por documento
+            content = doc.get('content', '')
             
-            part = f"📄 **{title}**\n{content}\n"
+            if not content:
+                continue
+            
+            # Si el documento es muy largo y tenemos query, usar chunking inteligente
+            if len(content) > max_per_doc and query and enable_semantic:
+                # Dividir en chunks
+                chunks = split_into_chunks(content)
+                
+                # Encontrar chunks relevantes
+                relevant_chunks = find_relevant_chunks(chunks, query, top_k=2)
+                selected_content = " ... ".join(chunk for chunk, _ in relevant_chunks)
+                
+                if len(selected_content) > max_per_doc:
+                    selected_content = selected_content[:max_per_doc] + "..."
+            else:
+                # Simplemente truncar si es corto o semantic search deshabilitado
+                selected_content = content[:max_per_doc]
+            
+            # Formatear parte del contexto
+            part = f"📄 **{title}**\n{selected_content}\n"
+            
             if total_chars + len(part) > max_chars:
+                # Si no cabe, intentar agregar por lo menos algo truncado
+                remaining = max_chars - total_chars
+                if remaining > 100:
+                    part = f"📄 **{title}**\n{selected_content[:remaining-20]}...\n"
+                    context_parts.append(part)
                 break
             
             context_parts.append(part)
             total_chars += len(part)
         
-        return "\n".join(context_parts)
+        result = "\n".join(context_parts)
+        
+        # Log para debugging
+        if context_parts:
+            logger.debug(
+                f"RAG context built: docs={len(documents)}, "
+                f"selected={len(context_parts)}, chars={total_chars}"
+            )
+        
+        return result
     
     def generate_response(
         self,
@@ -76,6 +226,9 @@ class GroqService:
         context_documents: Optional[List[Dict]] = None,
         conversation_history: Optional[List[Dict]] = None,
         notebook_id: Optional[str] = None,
+        model_override: Optional[str] = None,
+        temperature_override: Optional[float] = None,
+        max_tokens_override: Optional[int] = None,
     ) -> Dict:
         """
         Generar respuesta con Groq + contexto RAG
@@ -86,6 +239,9 @@ class GroqService:
             context_documents: Documentos para RAG
             conversation_history: Historial de conversación previo
             notebook_id: ID del notebook (para logging)
+            model_override: Sobrescribir modelo (Fase 6: para settings de usuario)
+            temperature_override: Sobrescribir temperatura (Fase 6: para settings de usuario)
+            max_tokens_override: Sobrescribir max_tokens (Fase 6: para settings de usuario)
         
         Returns:
             {
@@ -105,10 +261,14 @@ class GroqService:
                     "Mantén respuestas concisas y precisas."
                 )
             
-            # Construir contexto RAG
+            # Construir contexto RAG con búsqueda inteligente
             rag_context = ""
             if context_documents:
-                rag_context = self.build_rag_context(context_documents)
+                # Pasar query para búsqueda de relevancia (Fase 6 STEP 3)
+                rag_context = self.build_rag_context(
+                    context_documents,
+                    query=user_message
+                )
                 system_prompt += f"\n\n**Contexto de documentos disponibles:**\n{rag_context}"
             
             # Preparar mensajes
@@ -128,22 +288,28 @@ class GroqService:
                 "content": user_message
             })
             
+            # Usar overrides de usuario si se proporcionan (Fase 6: settings de usuario)
+            model_to_use = model_override or self.model
+            temperature_to_use = temperature_override if temperature_override is not None else self.temperature
+            max_tokens_to_use = max_tokens_override or self.max_tokens
+            
             # Llamada a Groq
             logger.info(
-                f"Groq request: model={self.model}, "
-                f"tokens_max={MAX_TOKENS}, "
+                f"Groq request: model={model_to_use}, "
+                f"tokens_max={max_tokens_to_use}, "
+                f"temp={temperature_to_use}, "
                 f"messages={len(messages)}, "
                 f"notebook={notebook_id}"
             )
             
             completion = self.client.chat.completions.create(
-                model=self.model,
+                model=model_to_use,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     *messages
                 ],
-                max_tokens=MAX_TOKENS,
-                temperature=0.7,
+                max_tokens=max_tokens_to_use,
+                temperature=temperature_to_use,
             )
             
             # Extraer respuesta
@@ -182,17 +348,26 @@ class GroqService:
         return text
 
 
-# Global instance
-_groq_service = None
-
-
+# Singleton con thread-safety garantizado por @lru_cache
+@lru_cache(maxsize=1)
 def get_groq_service() -> GroqService:
-    """Singleton para GroqService"""
-    global _groq_service
-    if _groq_service is None:
-        try:
-            _groq_service = GroqService()
-        except LLMServiceError as e:
-            logger.warning(f"Groq no disponible: {e}")
-            return None
-    return _groq_service
+    """
+    Obtener instancia singleton de GroqService.
+    
+    Usa @lru_cache para garantizar:
+    - Una única instancia en toda la aplicación
+    - Thread-safe (no hay race conditions)
+    - Cacheado automáticamente
+    - Mejor que variables globales mutables
+    
+    Returns:
+        GroqService: Instancia de servicio Groq
+        
+    Raises:
+        LLMServiceError: Si Groq no está disponible
+    """
+    try:
+        return GroqService()
+    except LLMServiceError as e:
+        logger.warning(f"Groq no disponible: {e}")
+        raise

@@ -25,5 +25,18 @@ services:
     depends_on:
       - db
 
+  frontend:
+    build: ./frontend
+    container_name: pdf_ia_rework_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_BASE_URL: http://localhost:8001/api/v1
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:

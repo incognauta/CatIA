@@ -25,6 +25,8 @@ Full-stack application for intelligent document analysis with AI-powered chat. B
 
 - [GIT_STRATEGY.md](GIT_STRATEGY.md) - What to upload/ignore & why
 - [PRE_PUSH_CHECKLIST.md](PRE_PUSH_CHECKLIST.md) - Verify before pushing to GitHub
+- [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) - Setup & start scripts documentation
+- [docs/IMPROVEMENT_PLAN.md](docs/IMPROVEMENT_PLAN.md) - Technical improvements roadmap
 - [docs/](docs/) - Detailed documentation
 - **[📊 Architecture Diagrams](docs/ARCHITECTURE_DIAGRAMS.md)** - Class, Flow & System Diagrams
 
@@ -40,7 +42,32 @@ Full-stack application for intelligent document analysis with AI-powered chat. B
 - **Groq API Key** - Get free key at https://console.groq.com/keys
 - **Docker & Docker Compose** (optional, for containerized setup)
 
-### Using Docker Compose (Recommended)
+### ⚡ Automated Setup (Recommended)
+
+Use the setup scripts to automate everything:
+
+```bash
+# Initial setup (run once)
+./setup.sh
+# → Choose: Docker Compose or Local Development
+# → Answer questions about API keys
+# → Done! ✨
+
+# Start development (run every time)
+./start.sh
+# → Frontend: http://localhost:5173
+# → Backend: http://localhost:8001/api/v1
+```
+
+**See [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) for detailed script documentation.**
+
+---
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+#### Docker Compose Manual
 
 ```bash
 # 1. Clone and setup
@@ -62,10 +89,10 @@ docker-compose up -d
 # Backend: http://localhost:8001/api/v1
 ```
 
-### Local Development
+#### Local Development Manual
 
-#### Backend
 ```bash
+# Backend
 cd backend
 python -m venv venv
 source venv/bin/activate
@@ -73,10 +100,8 @@ pip install -r requirements.txt
 cp .env.example .env  # Edit with Groq key
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8001
-```
 
-#### Frontend
-```bash
+# Frontend (in another terminal)
 cd frontend
 npm install --legacy-peer-deps
 cp .env.example .env.local
@@ -252,7 +277,20 @@ PDF_IA_Rework/
 - Zustand state with localStorage persistence
 - **Critical fix**: Chat isolation per notebook (no cross-contamination)
 
-### 🔜 Upcoming (Fase 6)
+### � Technical Improvements (Pre-Phase 6)
+
+**Identified Issues** from code review - See [IMPROVEMENT_PLAN.md](docs/IMPROVEMENT_PLAN.md) for details:
+
+1. ⚠️ **Variable Global Mutable** - `_groq_service` needs thread-safety fix (`@lru_cache`)
+2. ⚠️ **Hardcoded Constants** - `GROQ_MODEL` and `MAX_TOKENS` should be in settings
+3. ⚠️ **Document Truncation** - 500 char limit is arbitrary, needs configuration
+4. ⚠️ **Duplicate Imports** - Clean up `core/models.py`
+
+**Impact**: 🔴 Crítica para producción  
+**Timeline**: Before Fase 6 starts  
+**Effort**: ~13-18 hours
+
+### �����🔜 Upcoming (Fase 6)
 - [ ] Storage quotas (FREE vs PREMIUM plans)
 - [ ] Document preview / search inside documents
 - [ ] Settings page (API keys, preferences)

@@ -1,0 +1,87 @@
+classDiagram
+    class User {
+        -UUID id
+        -String username
+        -String email*
+        -String subscription_tier
+        -Boolean email_verified
+        -DateTime created_at
+        -DateTime updated_at
+        +login()
+        +register()
+        +logout()
+    }
+    
+    class UserProfile {
+        -UUID id
+        -String bio
+        -String avatar_url
+        -String preferred_language
+        -DateTime subscription_expires_at
+        +update_profile()
+    }
+    
+    class Notebook {
+        -UUID id
+        -String name*
+        -String slug*
+        -String description
+        -String color
+        -String icon
+        -Boolean is_default
+        -DateTime created_at
+        -DateTime updated_at
+        +create()
+        +update()
+        +delete()
+    }
+    
+    class Document {
+        -UUID id
+        -String title
+        -String original_filename
+        -Text content
+        -Text content_markdown
+        -String file_type
+        -String file_path
+        -BigInt file_size
+        -Int pages
+        -DateTime created_at
+        +upload()
+        +delete()
+        +extract_content()
+    }
+    
+    class ChatMessage {
+        -UUID id
+        -String role
+        -Text content
+        -Int tokens_used
+        -DateTime created_at
+        +send_message()
+        +get_response_from_groq()
+    }
+    
+    class Interaction {
+        -UUID id
+        -String interaction_type
+        -Text content
+        -Text ai_response
+        -JSON metadata
+        -DateTime created_at
+        +track_interaction()
+    }
+    
+    User "1" --> "*" Notebook : owns
+    User "1" --> "1" UserProfile : has
+    User "1" --> "*" Document : uploads
+    User "1" --> "*" ChatMessage : sends
+    User "1" --> "*" Interaction : performs
+    
+    Notebook "1" --> "*" Document : contains
+    Notebook "1" --> "*" ChatMessage : has_context
+    Notebook "1" --> "*" Interaction : tracks
+    
+    Document "1" --> "*" ChatMessage : referenced_in
+    
+    ChatMessage "0..1" --> "0..1" Document : about

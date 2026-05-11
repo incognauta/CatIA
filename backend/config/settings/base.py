@@ -124,3 +124,72 @@ CORS_ALLOWED_ORIGINS = config(
     cast=Csv(),
 )
 CORS_ALLOW_CREDENTIALS = True
+
+# ═══════════════════════════════════════════════════════════
+# Configuración de Groq LLM (Fase 6 Mejora)
+# ═══════════════════════════════════════════════════════════
+
+GROQ_CONFIG = {
+    "MODEL": config(
+        "GROQ_MODEL",
+        default="llama-3.1-8b-instant",
+        cast=str,
+    ),
+    "MAX_TOKENS": config(
+        "GROQ_MAX_TOKENS",
+        default="1024",
+        cast=int,
+    ),
+    "TEMPERATURE": config(
+        "GROQ_TEMPERATURE",
+        default="0.7",
+        cast=float,
+    ),
+    "API_KEY": config(
+        "GROQ_API_KEY",
+        default="",
+        cast=str,
+    ),
+}
+
+# Validación de configuración
+if not GROQ_CONFIG["API_KEY"] and not DEBUG:
+    import warnings
+    warnings.warn("GROQ_API_KEY no está configurada en producción")
+
+# ═══════════════════════════════════════════════════════════
+# Configuración de Procesamiento de Documentos (Fase 6 Mejora)
+# ═══════════════════════════════════════════════════════════
+
+DOCUMENT_CONFIG = {
+    # Máximo de caracteres por documento en RAG context
+    "MAX_CHARS_PER_DOCUMENT": config(
+        "DOCUMENT_MAX_CHARS_PER_DOC",
+        default="1500",
+        cast=int,
+    ),
+    # Máximo total de caracteres en contexto RAG
+    "MAX_CHARS_TOTAL": config(
+        "DOCUMENT_MAX_CHARS_TOTAL",
+        default="5000",
+        cast=int,
+    ),
+    # Usar búsqueda semántica para seleccionar fragmentos relevantes
+    "ENABLE_SEMANTIC_SEARCH": config(
+        "DOCUMENT_ENABLE_SEMANTIC_SEARCH",
+        default="True",
+        cast=bool,
+    ),
+    # Tamaño de chunks para chunking inteligente
+    "CHUNK_SIZE": config(
+        "DOCUMENT_CHUNK_SIZE",
+        default="500",
+        cast=int,
+    ),
+    # Overlap entre chunks para contexto
+    "CHUNK_OVERLAP": config(
+        "DOCUMENT_CHUNK_OVERLAP",
+        default="50",
+        cast=int,
+    ),
+}
