@@ -1,6 +1,9 @@
 """
 LLM Service: Groq API integration + RAG (Retrieval Augmented Generation)
-Fase 4C
+Fase 7: Dependency Inversion Principle
+
+Este módulo proporciona acceso a los servicios refactorizados usando el patrón DIP.
+Mantiene compatibilidad hacia atrás importando desde services/.
 """
 import logging
 import re
@@ -8,6 +11,10 @@ from functools import lru_cache
 from typing import List, Dict, Optional, Tuple
 
 from django.conf import settings
+
+# Importar desde services (DIP refactoring)
+from .services.factory import LLMServiceFactory
+from .services.base import LLMServiceBase
 
 try:
     from groq import Groq
@@ -27,7 +34,24 @@ class LLMServiceError(Exception):
 
 
 # ═══════════════════════════════════════════════════════════
+# Factory singleton para obtener instancia de servicio (Fase 7: DIP)
+# ═══════════════════════════════════════════════════════════
+
+@lru_cache(maxsize=1)
+def get_llm_service() -> LLMServiceBase:
+    """
+    Obtener instancia singleton de LLMService
+    
+    Usa factory pattern para resolver la implementación.
+    Thread-safe con functools.lru_cache.
+    """
+    return LLMServiceFactory.create_service('groq')
+
+
+# ═══════════════════════════════════════════════════════════
 # Utilidades de Chunking e Indexación (Fase 6: Mejora STEP 3)
+# ═══════════════════════════════════════════════════════════
+
 # ═══════════════════════════════════════════════════════════
 
 def split_into_chunks(
@@ -122,18 +146,16 @@ class LLMServiceError(Exception):
 
 
 class GroqService:
-    """Servicio centralizado para Groq API con RAG"""
+    """
+    Servicio centralizado para Groq API con RAG
+    
+    NOTA (Fase 7): Este es ahora un wrapper que delega al nuevo GroqLLMService
+    del paquete services/. Se mantiene para compatibilidad hacia atrás.
+    """
     
     def __init__(self):
         """Inicializar cliente Groq"""
-        api_key = GROQ_CONFIG.get('API_KEY', '')
-        if not api_key:
-            raise LLMServiceError("GROQ_API_KEY no configurada en settings")
-        
-        if Groq is None:
-            raise LLMServiceError("groq no instalado. Instala: pip install groq")
-        
-        self.client = Groq(api_key=api_key)
+        self._service = get_llm_service()
         self.model = GROQ_CONFIG.get('MODEL', 'llama-3.1-8b-instant')
         self.max_tokens = GROQ_CONFIG.get('MAX_TOKENS', 1024)
         self.temperature = GROQ_CONFIG.get('TEMPERATURE', 0.7)
@@ -233,6 +255,9 @@ class GroqService:
         """
         Generar respuesta con Groq + contexto RAG
         
+        NOTA (Fase 7): Ahora delega al GroqLLMService.generate_response()
+        pero mantiene la API compatible.
+        
         Args:
             user_message: Mensaje del usuario
             system_prompt: Prompt del sistema (default: assistente educativo)
@@ -261,74 +286,23 @@ class GroqService:
                     "Mantén respuestas concisas y precisas."
                 )
             
-            # Construir contexto RAG con búsqueda inteligente
-            rag_context = ""
-            if context_documents:
-                # Pasar query para búsqueda de relevancia (Fase 6 STEP 3)
-                rag_context = self.build_rag_context(
-                    context_documents,
-                    query=user_message
-                )
-                system_prompt += f"\n\n**Contexto de documentos disponibles:**\n{rag_context}"
-            
-            # Preparar mensajes
-            messages = []
-            
-            # Agregar historial previo (limitar a últimos 5 mensajes para evitar token overflow)
-            if conversation_history:
-                for msg in conversation_history[-5:]:
-                    messages.append({
-                        "role": msg.get("role", "user"),
-                        "content": msg.get("content", "")
-                    })
-            
-            # Agregar mensaje actual
-            messages.append({
-                "role": "user",
-                "content": user_message
-            })
-            
-            # Usar overrides de usuario si se proporcionan (Fase 6: settings de usuario)
-            model_to_use = model_override or self.model
-            temperature_to_use = temperature_override if temperature_override is not None else self.temperature
-            max_tokens_to_use = max_tokens_override or self.max_tokens
-            
-            # Llamada a Groq
-            logger.info(
-                f"Groq request: model={model_to_use}, "
-                f"tokens_max={max_tokens_to_use}, "
-                f"temp={temperature_to_use}, "
-                f"messages={len(messages)}, "
-                f"notebook={notebook_id}"
+            # Delegar al servicio inyectado
+            result = self._service.generate_response(
+                user_message=user_message,
+                system_prompt=system_prompt,
+                context_documents=context_documents,
+                conversation_history=conversation_history,
+                notebook_id=notebook_id,
+                model_override=model_override,
+                temperature_override=temperature_override,
+                max_tokens_override=max_tokens_override,
             )
             
-            completion = self.client.chat.completions.create(
-                model=model_to_use,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    *messages
-                ],
-                max_tokens=max_tokens_to_use,
-                temperature=temperature_to_use,
-            )
+            # Agregar stop_reason para compatibilidad
+            if 'stop_reason' not in result:
+                result['stop_reason'] = 'stop'
             
-            # Extraer respuesta
-            response_text = completion.choices[0].message.content
-            tokens_used = completion.usage.total_tokens
-            stop_reason = completion.choices[0].finish_reason
-            
-            logger.info(
-                f"Groq response: tokens={tokens_used}, "
-                f"stop_reason={stop_reason}, "
-                f"notebook={notebook_id}"
-            )
-            
-            return {
-                'response': response_text,
-                'tokens_used': tokens_used,
-                'model': self.model,
-                'stop_reason': stop_reason,
-            }
+            return result
         
         except Exception as e:
             logger.error(f"Groq error: {str(e)}", exc_info=True)
