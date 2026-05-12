@@ -3,6 +3,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Notebook
 from .serializers import NotebookSerializer, NotebookCreateUpdateSerializer
+from apps.core.services.notebook_service import DjangoNotebookService
+
+# Instancia única del servicio de notebooks
+_notebook_service = None
+
+def get_notebook_service():
+    """Obtener instancia del servicio de notebooks (singleton)"""
+    global _notebook_service
+    if _notebook_service is None:
+        _notebook_service = DjangoNotebookService()
+    return _notebook_service
 
 
 class NotebookViewSet(viewsets.ModelViewSet):

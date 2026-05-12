@@ -4,10 +4,20 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Document
 from .serializers import DocumentSerializer, DocumentCreateSerializer, DocumentListSerializer
-from apps.core.processors import FileProcessor, FileProcessorError
+from apps.core.services.document_service import DjangoDocumentUploadService
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Instancia única del servicio de carga de documentos
+_document_service = None
+
+def get_document_service():
+    """Obtener instancia del servicio de documentos (singleton)"""
+    global _document_service
+    if _document_service is None:
+        _document_service = DjangoDocumentUploadService()
+    return _document_service
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
@@ -77,65 +87,30 @@ class DocumentViewSet(viewsets.ModelViewSet):
             )
         
         uploaded_file = request.FILES['file']
-        
-        # Obtener notebook (default o especificado)
         notebook_id = request.data.get('notebook')
-        if notebook_id:
-            from apps.notebooks.models import Notebook
-            try:
-                notebook = Notebook.objects.get(id=notebook_id, user=request.user)
-            except Notebook.DoesNotExist:
-                return Response(
-                    {'error': 'Notebook no encontrado'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            # Usar default notebook del usuario
-            from apps.notebooks.models import Notebook
-            notebook, _ = Notebook.objects.get_or_create(
-                user=request.user,
-                is_default=True,
-                defaults={
-                    'name': 'Sin clasificar',
-                    'slug': 'sin-clasificar',
-                }
-            )
+        title = request.data.get('title')
         
-        # Procesar archivo
+        # Usar servicio de documentos para procesar la carga
         try:
-            content_type = uploaded_file.content_type
-            file_data = FileProcessor.process_file(
-                uploaded_file,
-                content_type,
-                uploaded_file.name
+            document_service = get_document_service()
+            document_data = document_service.process_upload(
+                uploaded_file=uploaded_file,
+                notebook_id=notebook_id,
+                user_id=str(request.user.id),
+                title=title,
             )
+            
+            return Response(document_data, status=status.HTTP_201_CREATED)
         
-        except FileProcessorError as e:
-            logger.error(f"Error procesando archivo: {e}")
+        except ValueError as e:
+            logger.warning(f"Validación error: {e}")
             return Response(
-                {'error': f'Error procesando archivo: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST if "no encontrado" not in str(e) else status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            logger.error(f"Error inesperado: {e}")
+            logger.error(f"Error procesando archivo: {e}", exc_info=True)
             return Response(
                 {'error': 'Error interno al procesar archivo'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-        # Crear documento
-        title = request.data.get('title', uploaded_file.name)
-        document = Document.objects.create(
-            user=request.user,
-            notebook=notebook,
-            title=title,
-            original_filename=file_data['original_filename'],
-            file_type=file_data['file_type'],
-            file_size=file_data['file_size'],
-            pages=file_data['pages'],
-            content=file_data['content'],
-            content_markdown=file_data['content_markdown'],
-        )
-        
-        serializer = DocumentSerializer(document)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)

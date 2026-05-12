@@ -166,3 +166,150 @@ class RAGServiceBase(ABC):
             Chunks ordenados por relevancia
         """
         pass
+
+
+class ChatServiceBase(ABC):
+    """
+    Interfaz abstracta para lógica de negocio del chat
+    
+    Orquesta la interacción entre documentos, LLM y historial de conversación.
+    Define el contrato para procesar preguntas del usuario con contexto RAG.
+    """
+    
+    @abstractmethod
+    def process_query(
+        self,
+        user_id: str,
+        notebook_id: str,
+        message: str,
+        system_prompt: Optional[str] = None,
+    ) -> Dict:
+        """
+        Procesar pregunta del usuario con contexto RAG
+        
+        Args:
+            user_id: ID del usuario
+            notebook_id: ID del notebook
+            message: Mensaje del usuario
+            system_prompt: Prompt del sistema (instrucciones) opcional
+        
+        Returns:
+            Dict con resultado completo del chat
+        """
+        pass
+    
+    @abstractmethod
+    def get_conversation_history(
+        self,
+        user_id: str,
+        notebook_id: str,
+        limit: int = 10,
+    ) -> List[Dict]:
+        """
+        Obtener historial de conversación
+        
+        Args:
+            user_id: ID del usuario
+            notebook_id: ID del notebook
+            limit: Número máximo de mensajes a retornar
+        
+        Returns:
+            Lista de mensajes [{'role': 'user'/'assistant', 'content': ...}]
+        """
+        pass
+    
+    @abstractmethod
+    def clear_history(
+        self,
+        user_id: str,
+        notebook_id: str,
+    ) -> int:
+        """
+        Limpiar historial de conversación
+        
+        Args:
+            user_id: ID del usuario
+            notebook_id: ID del notebook
+        
+        Returns:
+            Número de mensajes eliminados
+        """
+        pass
+
+
+class DocumentUploadServiceBase(ABC):
+    """
+    Interfaz abstracta para procesamiento de documentos (carga y procesamiento)
+    
+    Define el contrato para procesar archivos cargados por usuarios.
+    """
+    
+    @abstractmethod
+    def process_upload(
+        self,
+        uploaded_file,
+        notebook_id: Optional[str],
+        user_id: str,
+        title: Optional[str] = None,
+    ) -> Dict:
+        """
+        Procesar archivo cargado
+        
+        Args:
+            uploaded_file: Archivo cargado desde request.FILES
+            notebook_id: ID del notebook (usa default si es None)
+            user_id: ID del usuario
+            title: Título del documento (usa filename si no lo proporciona)
+        
+        Returns:
+            Dict con documento procesado {'id', 'title', 'content', ...}
+        """
+        pass
+    
+    @abstractmethod
+    def validate_file(self, uploaded_file) -> tuple[bool, str]:
+        """
+        Validar que el archivo sea soportado
+        
+        Args:
+            uploaded_file: Archivo a validar
+        
+        Returns:
+            Tupla (es_válido, mensaje_error)
+        """
+        pass
+
+
+class NotebookServiceBase(ABC):
+    """
+    Interfaz abstracta para lógica de negocio de notebooks
+    
+    Define el contrato para gestionar notebooks del usuario.
+    """
+    
+    @abstractmethod
+    def get_or_create_default(self, user_id: str) -> Dict:
+        """
+        Obtener o crear notebook default del usuario
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Dict con notebook {'id', 'name', 'slug', 'created_at', ...}
+        """
+        pass
+    
+    @abstractmethod
+    def get_user_notebooks(self, user_id: str, limit: Optional[int] = None) -> List[Dict]:
+        """
+        Obtener todos los notebooks del usuario
+        
+        Args:
+            user_id: ID del usuario
+            limit: Número máximo de notebooks (None = todos)
+        
+        Returns:
+            Lista de notebooks ordenados por fecha de creación
+        """
+        pass
