@@ -10,8 +10,10 @@ export const documentsAPI = {
     formData.append('file', file)
     formData.append('notebook', notebookId)
     
+    // IMPORTANT: Do NOT set Content-Type header for FormData
+    // Let the browser set it automatically with the correct boundary
     return apiClient.post<Document>('/documents/upload/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     })
   },
   

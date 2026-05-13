@@ -9,6 +9,9 @@ import RegisterPage from '@pages/RegisterPage'
 import DashboardPage from '@pages/DashboardPage'
 import NotebookPage from '@pages/NotebookPage'
 import ComingSoonPage from '@pages/ComingSoonPage'
+import SettingsPage from '@pages/SettingsPage'
+import HelpPage from '@pages/HelpPage'
+import DocsPage from '@pages/DocsPage'
 
 // Layout
 import RootLayout from '@components/layout/RootLayout'
@@ -43,10 +46,10 @@ function AppRoutes() {
         <Route element={<RootLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/notebook/:notebookId" element={<NotebookPage />} />
+          <Route path="/documents" element={<DocsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/help" element={<HelpPage />} />
           <Route path="/coming-soon" element={<ComingSoonPage />} />
-          <Route path="/documents" element={<ComingSoonPage />} />
-          <Route path="/settings" element={<ComingSoonPage />} />
-          <Route path="/help" element={<ComingSoonPage />} />
         </Route>
       )}
       

@@ -55,7 +55,7 @@ class DjangoDocumentUploadService(DocumentUploadServiceBase):
             ValueError: Si archivo no es válido
             FileProcessorError: Si falla el procesamiento
         """
-        from django.contrib.auth.models import User
+        from apps.users.models import User
         from apps.notebooks.models import Notebook
         from apps.documents.models import Document
         from apps.documents.serializers import DocumentSerializer
@@ -78,15 +78,18 @@ class DjangoDocumentUploadService(DocumentUploadServiceBase):
             except Notebook.DoesNotExist:
                 raise ValueError("Notebook no encontrado o no pertenece al usuario")
         else:
-            # Usar notebook default del usuario
-            notebook, _ = Notebook.objects.get_or_create(
-                user=user,
-                is_default=True,
-                defaults={
-                    'name': 'Sin clasificar',
-                    'slug': 'sin-clasificar',
-                }
-            )
+            # Usar primer notebook del usuario, o crear uno default
+            notebook = Notebook.objects.filter(user=user).first()
+            if not notebook:
+                # Si el usuario no tiene notebooks, crear uno por defecto
+                notebook = Notebook.objects.create(
+                    user=user,
+                    name='Mi Notebook',
+                    slug='mi-notebook',
+                    is_default=True,
+                    description='Notebook por defecto'
+                )
+                logger.info(f"Notebook creado por defecto para usuario {user.id}: {notebook.id}")
         
         # 4. Procesar archivo
         try:

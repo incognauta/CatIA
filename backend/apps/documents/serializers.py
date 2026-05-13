@@ -44,5 +44,5 @@ class DocumentListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Document
-        fields = ('id', 'title', 'file_type', 'file_size', 'created_at')
+        fields = ('id', 'title', 'original_filename', 'notebook', 'file_type', 'file_size', 'created_at')
         read_only_fields = ('id', 'created_at')

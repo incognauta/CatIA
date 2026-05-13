@@ -110,7 +110,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
             )
         except Exception as e:
             logger.error(f"Error procesando archivo: {e}", exc_info=True)
+            import traceback
+            error_detail = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            logger.error(f"Error completo:\n{error_detail}")
             return Response(
-                {'error': 'Error interno al procesar archivo'},
+                {'error': f'Error interno al procesar archivo: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

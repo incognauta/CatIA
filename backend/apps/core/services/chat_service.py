@@ -58,7 +58,9 @@ class DjangoChatService(ChatServiceBase):
             ValueError: Si inputs no son válidos
             LLMServiceError: Si falla el servicio LLM
         """
-        from django.contrib.auth.models import User
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
         from apps.notebooks.models import Notebook
         from apps.documents.models import Document
         from apps.chat.models import ChatMessage
@@ -190,7 +192,9 @@ class DjangoChatService(ChatServiceBase):
         Returns:
             Lista de mensajes [{'role': 'user'/'assistant', 'content': ...}]
         """
-        from django.contrib.auth.models import User
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
         from apps.notebooks.models import Notebook
         from apps.chat.models import ChatMessage
         
@@ -227,7 +231,9 @@ class DjangoChatService(ChatServiceBase):
         Returns:
             Número de mensajes eliminados
         """
-        from django.contrib.auth.models import User
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
         from apps.notebooks.models import Notebook
         from apps.chat.models import ChatMessage
         
