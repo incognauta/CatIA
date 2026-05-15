@@ -1,685 +1,453 @@
-# PDF_IA_Rework - AI Document Analysis Platform
+# PDF_IA_Rework — AI Document Analysis Platform
 
-Full-stack application for intelligent document analysis with AI-powered chat. Built with Django 5.0, React 19, and Groq API.
+Full-stack application for intelligent document analysis with AI-powered chat. Built with **Django 5.0 + DRF**, **React 19 + TypeScript**, and **Groq API**.
 
-![Status](https://img.shields.io/badge/status-MVP%20Fase%205-brightgreen)
-![Python](https://img.shields.io/badge/python-3.11+-blue)
+![Status](https://img.shields.io/badge/status-Fase%207-blueviolet)
+![Python](https://img.shields.io/badge/python-3.12+-blue)
 ![Node](https://img.shields.io/badge/node-18+-blue)
 ![React](https://img.shields.io/badge/react-19-61dafb)
 ![Django](https://img.shields.io/badge/django-5.0-092e20)
+![Tests](https://img.shields.io/badge/tests-57%20passing-brightgreen)
 
 ---
 
-## ✨ Features
+## Features
 
-- 📓 **Notebook System** - Create and organize multiple dynamic notebooks
-- 💬 **AI Chat** - Ask questions powered by Groq API (llama-3.1-8b-instant)
-- 📄 **Document Upload** - Upload and manage documents in notebooks
-- 🔐 **JWT Authentication** - Secure token-based auth with refresh
-- 💾 **Auto-Save** - Automatic markdown saving with debouncing
-- 📱 **Responsive Design** - Modern UI with CatIA color palette
-
----
-
-## 📋 Quick Links
-
-- [GIT_STRATEGY.md](GIT_STRATEGY.md) - What to upload/ignore & why
-- [PRE_PUSH_CHECKLIST.md](PRE_PUSH_CHECKLIST.md) - Verify before pushing to GitHub
-- [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) - Setup & start scripts documentation
-- [docs/IMPROVEMENT_PLAN.md](docs/IMPROVEMENT_PLAN.md) - Technical improvements roadmap
-- [docs/](docs/) - Detailed documentation
-- **[📊 Architecture Diagrams](docs/ARCHITECTURE_DIAGRAMS.md)** - Class, Flow & System Diagrams
+- **Notebook System** — Dynamic notebooks with per-notebook chat isolation
+- **AI Chat with RAG** — Context-aware answers using document content (Groq API)
+- **Multi-format Upload** — PDF, DOCX, TXT, images with OCR (Tesseract)
+- **JWT Authentication** — Secure token-based auth with refresh + roles (Free/Premium/Admin)
+- **LLM Settings** — Configurable model, temperature, max tokens per user
+- **DIP Architecture** — Service layer with Dependency Inversion Principle
+- **Docker Ready** — Full containerized setup with Docker Compose
+- **Auto-Save** — Automatic markdown saving with debouncing
 
 ---
 
-## 🚀 Quick Start
+## Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend — React 19 + Vite + TypeScript"]
+        P[Pages<br/>8 pages]
+        C[Components<br/>8 components]
+        H[Hooks<br/>useAuth, useChat, useNotebooks, etc.]
+        S[Zustand Stores<br/>auth, chat, notebook, ui]
+        API[API Client<br/>Axios + JWT Interceptor]
+    end
+
+    subgraph Backend["Backend — Django 5.0 + DRF"]
+        direction TB
+        subgraph Apps["Django Apps"]
+            U[users<br/>Auth, Roles, Plans<br/>Subscriptions]
+            N[notebooks<br/>CRUD, Slug, Default]
+            D[documents<br/>Upload, Processing<br/>Content Extraction]
+            CH[chat<br/>Messages, RAG,<br/>History Isolation]
+            CORE[core<br/>LLM Service,<br/>File Processor, DIP]
+            I[interactions<br/>Tracking — WIP]
+        end
+        subgraph Services["Service Layer — DIP"]
+            LLM[GroqLLMService]
+            FP[FileProcessor<br/>PDF · DOCX · TXT · OCR]
+            DS[DjangoChatService<br/>RAG + History]
+        end
+        SETTINGS[Config<br/>base · development · production]
+    end
+
+    subgraph External["External Services"]
+        GROQ[Groq API<br/>llama · mixtral · gemma]
+        DB[(PostgreSQL 15<br/>pgvector)]
+        TESS[Tesseract OCR]
+    end
+
+    Frontend -->|HTTP REST| Backend
+    Backend --> GROQ
+    Backend --> DB
+    Backend --> TESS
+    API -->|JWT Auth| U
+    API --> N
+    API --> D
+    API --> CH
+    API --> CORE
+```
+
+---
+
+## Data Flow Diagram
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend
+    participant Backend
+    participant DB as PostgreSQL
+    participant Groq as Groq API
+
+    Note over User,Groq: Document Upload Flow
+    User->>Frontend: Upload file (PDF / DOCX / TXT / IMG)
+    Frontend->>Backend: POST /api/v1/documents/upload/
+    Backend->>Backend: FileProcessor (extract text + OCR if image)
+    Backend->>DB: Store document metadata + content
+    Backend-->>Frontend: Document created
+    Frontend-->>User: Confirm upload
+
+    Note over User,Groq: AI Chat Flow (RAG)
+    User->>Frontend: Type question
+    Frontend->>Backend: POST /api/v1/chat/ask_ai/
+    Backend->>DB: Fetch notebook documents (RAG context)
+    Backend->>Groq: Send prompt + document context
+    Groq-->>Backend: AI response
+    Backend->>DB: Save ChatMessage (user + assistant)
+    Backend-->>Frontend: AI response
+    Frontend-->>User: Display answer
+
+    Note over User,Groq: LLM Settings Flow
+    User->>Frontend: Change model / temperature
+    Frontend->>Backend: PUT /api/v1/llm-settings/{id}/
+    Backend->>DB: Update UserLLMSettings
+    Backend-->>Frontend: Settings updated
+    Frontend-->>User: Confirm
+```
+
+---
+
+## Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    User ||--o{ Notebook : owns
+    User ||--o{ Document : owns
+    User ||--o{ ChatMessage : sends
+    User ||--|| UserProfile : has
+    User ||--|| UserSubscription : subscribes
+    User ||--|| UserLLMSettings : configures
+    UserSubscription }|--|| Plan : based_on
+    Notebook ||--o{ Document : contains
+    Notebook ||--o{ ChatMessage : has
+
+    User {
+        uuid id PK
+        string username
+        string email UK
+        string subscription_tier
+        boolean email_verified
+        datetime created_at
+    }
+
+    Notebook {
+        uuid id PK
+        string name
+        string slug UK "per user"
+        string description
+        string color
+        boolean is_default
+        datetime created_at
+    }
+
+    Document {
+        uuid id PK
+        string title
+        string original_filename
+        text content
+        text content_markdown
+        string file_type
+        int file_size
+        int pages
+        datetime created_at
+    }
+
+    ChatMessage {
+        uuid id PK
+        string role "user | assistant"
+        text content
+        int tokens_used
+        datetime created_at
+    }
+
+    Plan {
+        uuid id PK
+        string name "free | pro | enterprise"
+        decimal price
+        int documents_limit
+        int messages_per_month
+        json features
+    }
+
+    UserLLMSettings {
+        uuid id PK
+        string model "llama | mixtral | gemma"
+        float temperature
+        int max_tokens
+    }
+```
+
+---
+
+## Quick Start
 
 ### Prerequisites
 
-- **Python** 3.11+
+- **Python** 3.12+
 - **Node.js** 18+
-- **PostgreSQL** 15+ (running on port 5434, or use SQLite for quick testing)
-- **Groq API Key** - Get free key at https://console.groq.com/keys
-- **Docker & Docker Compose** (optional, for containerized setup)
+- **PostgreSQL** 15+ (port 5434, or use Docker)
+- **Groq API Key** — Get a free key at https://console.groq.com/keys
+- **Docker & Docker Compose** (optional, recommended)
 
-### ⚡ Automated Setup (Recommended)
-
-Use the setup scripts to automate everything:
+### Automated Setup (Recommended)
 
 ```bash
-# Initial setup (run once)
+# Initial setup (run once — creates .env, installs deps)
 ./setup.sh
-# → Choose: Docker Compose or Local Development
-# → Answer questions about API keys
-# → Done! ✨
 
-# Start development (run every time)
+# Start development (daily use)
 ./start.sh
 # → Frontend: http://localhost:5173
-# → Backend: http://localhost:8001/api/v1
+# → Backend:  http://localhost:8001/api/v1
 ```
 
-**See [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) for detailed script documentation.**
+See [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) for full documentation.
 
----
-
-### Manual Setup
-
-If you prefer to set up manually:
-
-#### Docker Compose Manual
+### Docker Compose
 
 ```bash
-# 1. Clone and setup
-git clone <repo-url>
-cd PDF_IA_Rework
-
-# 2. Create environment files
-cp backend/.env.example backend/.env
+cp backend/.env.example  backend/.env
 cp frontend/.env.example frontend/.env.local
+# Edit backend/.env  →  add GROQ_API_KEY=gsk_...
 
-# 3. Edit with your Groq API key
-nano backend/.env  # Add: GROQ_API_KEY=gsk_...
-
-# 4. Start services
 docker-compose up -d
-
-# 5. Access
-# Frontend: http://localhost:5173
-# Backend: http://localhost:8001/api/v1
 ```
 
-#### Local Development Manual
+### Local Development
 
 ```bash
 # Backend
 cd backend
-python -m venv venv
-source venv/bin/activate
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # Edit with Groq key
+cp .env.example .env          # edit GROQ_API_KEY
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8001
 
-# Frontend (in another terminal)
+# Frontend (another terminal)
 cd frontend
 npm install --legacy-peer-deps
 cp .env.example .env.local
 npm run dev
-# Open http://localhost:5173
 ```
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-### Backend (Django 5.0)
-- **Database**: PostgreSQL 15 with pgvector support
-- **API**: REST with CORS enabled for frontend
-- **Authentication**: JWT tokens (SimpleJWT) with Bearer headers
-- **AI Integration**: Groq API connector for chat completions
-- **Models**: User, Notebook, Document, ChatMessage, Interaction
-- **Tests**: 57 passing tests covering core functionality
+### Backend (Django 5.0 + DRF)
 
-### Frontend (React 19 + Vite)
-- **UI Framework**: TailwindCSS with CatIA custom palette
-  - Primary: #7C3AED (purple)
-  - Accent: #EC4899 (pink)
-  - Gold: #F59E0B
-  - Dark: #0F172A
-- **State Management**: Zustand with triple persistence layer:
-  1. `authStore` - User token, profile, JWT refresh logic
-  2. `chatStore` - Messages **isolated per notebook** (prevents cross-contamination)
-  3. `notebookStore` - Markdown content with auto-save debouncing
-- **API Client**: Axios with JWT Bearer interceptor + 401 auto-logout
-- **Features**:
-  - Auto-save markdown (2-second debounce)
-  - Per-notebook chat isolation
-  - Hybrid markdown formatting (Bold, Italic, Code)
-  - Protected routes with auto-redirect
+| Layer | Description |
+|-------|-------------|
+| **6 Apps** | `users`, `notebooks`, `documents`, `chat`, `core`, `interactions` |
+| **Database** | PostgreSQL 15 with pgvector |
+| **Auth** | JWT (SimpleJWT) — access 1h / refresh 7d with rotation |
+| **Service Layer** | DIP pattern — abstract bases + concrete implementations |
+| **File Processing** | PDF (PyMuPDF), DOCX (python-docx), TXT, images (Tesseract OCR) |
+| **AI** | Groq API with RAG context (llama-3.1, mixtral, gemma) |
+| **Tests** | 57+ passing tests (1,256 lines) across all apps |
 
----
+### Frontend (React 19 + Vite + TypeScript)
 
-## 🔐 Important: Environment Variables
-
-**NEVER commit actual `.env` files** - they contain secrets!
-
-**Backend** requires:
-- `GROQ_API_KEY` - Mandatory for AI features
-- `SECRET_KEY` - Django secret
-- `DATABASE_URL` - PostgreSQL connection
-- `CORS_ALLOWED_ORIGINS` - Must match frontend URL
-
-**Frontend** configuration:
-- `VITE_API_BASE_URL` - Backend API endpoint
-
-See `.env.example` files for all options.
+| Layer | Description |
+|-------|-------------|
+| **UI** | TailwindCSS with CatIA palette (purple `#7C3AED`, pink `#EC4899`, gold `#F59E0B`) |
+| **State** | Zustand with localStorage persistence — 4 stores (auth, chat, notebook, ui) |
+| **Server State** | @tanstack/react-query for API data fetching & caching |
+| **API Client** | Axios singleton with JWT Bearer interceptor + 401 auto-logout |
+| **Pages** | 8 pages — Login, Register, Dashboard, Notebook, Docs, Settings, Help, ComingSoon |
+| **Components** | 8 components — Sidebar, Header, ChatSidebar, ChatMessage, ChatSettings, NotebookCanvas, DocumentsModal, RootLayout |
+| **Hooks** | 6 custom hooks — useAuth, useNotebooks, useNotebook, useChat, useDocuments, useLLMSettings |
 
 ---
 
-## 📦 Technology Stack
+## Technology Stack
 
 | Layer | Technology | Status |
 |-------|-----------|--------|
 | **Backend** | Django 5.0, DRF 3.14, PostgreSQL 15 | ✅ Production |
-| **Frontend** | React 19, Vite 5, TypeScript, TailwindCSS | ✅ Production |
-| **AI Engine** | Groq API (llama-3.1-8b-instant) | ✅ Integrated |
-| **Auth** | SimpleJWT, Bearer tokens | ✅ Implemented |
-| **State** | Zustand + localStorage persistence | ✅ Per-notebook isolation |
-| **API Client** | Axios + auto-refresh interceptor | ✅ JWT handling |
+| **Frontend** | React 19, Vite 5, TypeScript, TailwindCSS 3.4 | ✅ Production |
+| **AI Engine** | Groq API (llama-3.1, mixtral, gemma) | ✅ Integrated |
+| **Auth** | SimpleJWT, Bearer tokens, roles (Free / Premium / Admin) | ✅ Implemented |
+| **State** | Zustand + @tanstack/react-query | ✅ Implemented |
+| **API Client** | Axios + auto-refresh interceptor | ✅ Implemented |
+| **File Processing** | PyMuPDF, python-docx, Tesseract OCR, Pillow | ✅ Implemented |
 | **Deploy** | Docker, Docker Compose | ✅ Ready |
+| **Architecture** | DIP Service Layer, Repository Pattern | ✅ Fase 7 |
 
 ---
 
-## � API Structure
+## API Reference
 
-### Authentication
+### Health
 ```
-POST   /api/v1/auth/login/           - Authenticate & get JWT tokens
-POST   /api/v1/auth/register/        - Create new user account
-```
-
-### Notebooks
-```
-GET    /api/v1/notebooks/            - List user's notebooks
-POST   /api/v1/notebooks/            - Create new notebook
-GET    /api/v1/notebooks/:id/        - Retrieve notebook details
+GET  /health/
 ```
 
-### Chat
+### Authentication — `/api/v1/auth/`
 ```
-POST   /api/v1/chat/ask_ai/          - Send message, get AI response
-GET    /api/v1/chat/history/         - Get conversation history
-```
-
-### Documents
-```
-POST   /api/v1/documents/            - Upload document file
-GET    /api/v1/documents/            - List documents in notebook
-DELETE /api/v1/documents/:id/        - Delete document
+POST  /auth/register/        Register + JWT
+POST  /auth/login/            Login + JWT
 ```
 
----
-
-## 🪝 Frontend Hooks
-
-Custom React hooks for state management:
-- `useAuth()` - Login, register, logout, token refresh
-- `useNotebooks()` - CRUD operations on notebooks
-- `useChat()` - Send/retrieve messages per notebook (auto-isolated)
-- `useDocuments()` - Upload/delete documents with file preview
-
----
-
-## 🎯 Before First Push to GitHub
-
-1. **Read**: [GIT_STRATEGY.md](GIT_STRATEGY.md) - Explains what's ignored
-2. **Run**: [PRE_PUSH_CHECKLIST.md](PRE_PUSH_CHECKLIST.md) - Verify no secrets
-3. **Command**:
-   ```bash
-   git add .
-   git commit -m "Initial commit: MVP backend + frontend"
-   git push origin main
-   ```
-
----
-
-## 🐛 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Backend won't start | Run `python manage.py migrate` |
-| API 404 errors | Check `CORS_ALLOWED_ORIGINS` in backend `.env` |
-| Node modules too large | Use `.npmrc`: `legacy-peer-deps=true` |
-| Groq API not working | Verify API key validity at console.groq.com |
-
----
-
-## 🤝 Contributing
-
-1. Create feature branch: `git checkout -b feature/name`
-2. Commit: `git commit -m 'Description'`
-3. Push: `git push origin feature/name`
-4. Open PR
-
-See [GIT_STRATEGY.md](GIT_STRATEGY.md) for detailed guidelines.
-
----
-
-## 📝 Project Structure
-
+### Users — `/api/v1/users/`
 ```
-PDF_IA_Rework/
-├── backend/              # Django API
-│   ├── apps/            # Business logic
-│   ├── config/          # Settings
-│   └── requirements.txt
-├── frontend/            # React app
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.ts
-├── docker-compose.yml
-├── .gitignore           # See GIT_STRATEGY.md
-├── README.md            # This file
-└── docs/                # Detailed docs
+GET   /users/me/              Profile
+PUT   /users/me/              Update profile
+GET   /users/                 List (admin only)
 ```
 
-## 🎯 Current Status & Roadmap
-
-### ✅ Completed (Fase 5)
-- Full backend API with 57 passing tests
-- React 19 frontend with 32+ components
-- JWT authentication with token refresh
-- Notebook CRUD with dynamic creation
-- Document upload & management
-- Per-notebook chat with AI responses
-- Auto-save markdown with debouncing
-- Zustand state with localStorage persistence
-- **Critical fix**: Chat isolation per notebook (no cross-contamination)
-
-### � Technical Improvements (Pre-Phase 6)
-
-**Identified Issues** from code review - See [IMPROVEMENT_PLAN.md](docs/IMPROVEMENT_PLAN.md) for details:
-
-1. ⚠️ **Variable Global Mutable** - `_groq_service` needs thread-safety fix (`@lru_cache`)
-2. ⚠️ **Hardcoded Constants** - `GROQ_MODEL` and `MAX_TOKENS` should be in settings
-3. ⚠️ **Document Truncation** - 500 char limit is arbitrary, needs configuration
-4. ⚠️ **Duplicate Imports** - Clean up `core/models.py`
-
-**Impact**: 🔴 Crítica para producción  
-**Timeline**: Before Fase 6 starts  
-**Effort**: ~13-18 hours
-
-### �����🔜 Upcoming (Fase 6)
-- [ ] Storage quotas (FREE vs PREMIUM plans)
-- [ ] Document preview / search inside documents
-- [ ] Settings page (API keys, preferences)
-- [ ] User profile customization
-- [ ] Email notifications
-
-### 🚀 Future (Fase 7)
-- [ ] Payment integration (Stripe)
-- [ ] Advanced RAG with vector embeddings
-- [ ] Real-time collaboration
-- [ ] Production deployment
-- [ ] Monitoring & analytics
-
----
-
-## 🚀 Deployment Ready
-
-```bash
-# Run pre-push verification
-cat PRE_PUSH_CHECKLIST.md
-
-# Start with Docker Compose (production-like)
-docker-compose up -d
-
-# Or run locally
-cd backend && python manage.py runserver
-cd frontend && npm run dev
+### Notebooks — `/api/v1/notebooks/`
+```
+GET    /notebooks/                           List
+POST   /notebooks/                           Create
+GET    /notebooks/{id}/                      Detail
+PUT    /notebooks/{id}/                      Update
+DELETE /notebooks/{id}/                      Delete
+GET    /notebooks/{id}/documents/            Documents in notebook
+GET    /notebooks/{id}/chat_history/         Chat history
 ```
 
-**Ports:**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8001/api/v1
-- PostgreSQL: localhost:5434
+### Documents — `/api/v1/documents/`
+```
+GET    /documents/                           List
+POST   /documents/                           Create
+GET    /documents/{id}/                      Detail
+PUT    /documents/{id}/                      Update
+DELETE /documents/{id}/                      Delete
+POST   /documents/upload/                    Upload file (multipart)
+GET    /documents/{id}/content/              Full extracted text
+```
 
----
+### Chat — `/api/v1/chat/`
+```
+GET    /chat/                                List messages
+POST   /chat/                                Create message
+GET    /chat/{id}/                           Message detail
+PUT    /chat/{id}/                           Update message
+DELETE /chat/{id}/                           Delete message
+POST   /chat/ask_ai/                         Ask AI (with RAG context)
+GET    /chat/history/?notebook={id}          Conversation history
+DELETE /chat/clear_history/?notebook={id}    Clear history
+```
 
-## 📄 License
-
-MIT
-
----
-
-## 📞 Support
-
-Check [GIT_STRATEGY.md](GIT_STRATEGY.md) and [PRE_PUSH_CHECKLIST.md](PRE_PUSH_CHECKLIST.md) before asking questions.
-  ├── metadata (JSON flexible)
-  ├── context_snapshot (estado del notebook)
-  └── related_interactions (relaciones entre interacciones)
-
-Document
-  ├── file_path, file_size, pages
-  ├── content (texto extraído)
-  ├── summary
-  └── notebook (FK)
-
-ChatMessage
-  ├── role (user/assistant)
-  ├── content
-  ├── tokens_used
-  └── notebook, document (FKs)
+### LLM Settings — `/api/v1/llm-settings/`
+```
+GET    /llm-settings/                        Get user settings
+PUT    /llm-settings/{id}/                   Update settings
+PATCH  /llm-settings/{id}/                   Partial update
+GET    /llm-settings/defaults/               System defaults
+POST   /llm-settings/reset/                  Reset to defaults
 ```
 
 ---
 
-### 3. **Prioridades de Implementación** ([docs/ROADMAP.md](docs/ROADMAP.md))
+## Environment Variables
 
-| Fase | Días | Descripción | Estado |
-|------|------|-------------|--------|
-| **1** | 1-3 | Configuración inicial + Docker | ⏳ Pendiente |
-| **2** | 4-7 | Gestión de usuarios (auth, roles) | ⏳ Pendiente |
-| **3** | 8-10 | Sistema de notebooks | ⏳ Pendiente |
-| **4** | 11-13 | Tracking de interacciones | ⏳ Pendiente |
-| **5** | 14-17 | Gestión de documentos | ⏳ Pendiente |
-| **6** | 18-21 | Chat con IA (Groq) | ⏳ Pendiente |
-| **7** | 22-28 | Frontend (basado en mockup) | ⏳ Esperando mockup |
-| **8** | 29-31 | OCR (opcional) | ⏳ Futuro |
-| **9** | 32-35 | Pagos (Stripe) | ⏳ Futuro |
-| **10** | 36-40 | Deploy & Production | ⏳ Futuro |
-
-**Total estimado:** 6-8 semanas de desarrollo
+| File | Variable | Required | Default |
+|------|----------|----------|---------|
+| `backend/.env` | `GROQ_API_KEY` | Yes | — |
+| | `SECRET_KEY` | Yes | Auto-generated |
+| | `DATABASE_URL` | No | PostgreSQL on localhost:5434 |
+| | `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` |
+| `frontend/.env.local` | `VITE_API_BASE_URL` | No | `http://localhost:8001/api/v1` |
 
 ---
 
-## 🎯 Objetivos Generales (del documento adjunto)
-
-### Según tus requerimientos:
-
-1. ✅ **Carga y procesamiento de archivos**
-   - PDF, imágenes, Word, etc.
-   - OCR para documentos escaneados
-   - Extracción de texto
-   - Formato Markdown
-
-2. ✅ **Generación de chat con IA**
-   - Chat contextual por notebook
-   - Historial persistente
-   - Respuestas usando solo info del documento
-   - Streaming de respuestas (opcional)
-
-3. ✅ **Registro y autenticación de usuarios**
-   - Registro por email
-   - Login con JWT
-   - Roles: Free, Premium, Admin
-   - Cada usuario accede solo a sus archivos y conversaciones
-
-4. ✅ **Historial y almacenamiento**
-   - Guardar historial de conversaciones
-   - Asociar cada conversación con archivo correspondiente
-   - **CLAVE:** Sistema de Interacciones para tracking completo
-
-5. ✅ **Pasarela de pagos**
-   - Stripe integration
-   - Planes: Free (€0), Premium (€9.99), Enterprise (€29.99)
-   - Limitar acceso según plan
-   - Control de estado de suscripción
-
----
-
-## 🆚 Django + DRF vs FastAPI (Decisión Final)
-
-### ✅ **GANADOR: Django + DRF**
-
-| Criterio | Django + DRF | FastAPI |
-|----------|-------------|---------|
-| Admin Panel | ✅ Built-in | ❌ No existe |
-| Auth Robusta | ✅ Excelente | ⚠️ Manual |
-| ORM | ✅ Django ORM | ✅ SQLAlchemy |
-| Ecosistema | ✅ Maduro | ⏣ Creciendo |
-| Performance | ⚠️ Bueno | ✅ Excelente |
-| Seguridad | ✅ Battle-tested | ⚠️ Manual |
-| Mantenibilidad | ✅ Alta | ⚠️ Media |
-| Curva aprendizaje | ⚠️ Pronunciada | ✅ Fácil |
-
-**Veredicto:** 
-Para un proyecto con:
-- ✅ Gestión compleja de usuarios
-- ✅ Pasarela de pagos
-- ✅ Admin panel necesario
-- ✅ Largo plazo
-
-**Django es la mejor opción.**
-
----
-
-## 🔑 Características Únicas del Sistema de Interacciones
-
-### Por qué es revolucionario:
-
-```python
-# Ejemplo de uso del sistema de interacciones:
-
-# 1. Usuario sube un PDF de Cálculo II
-log_interaction(
-    user=user,
-    interaction_type='UPLOAD',
-    notebook=calculo_notebook,
-    document=document,
-    metadata={'filename': 'derivadas.pdf', 'pages': 25}
-)
-
-# 2. Usuario genera resumen
-log_interaction(
-    user=user,
-    interaction_type='SUMMARY',
-    notebook=calculo_notebook,
-    document=document,
-    ai_response=summary,
-    tokens_used=250,
-    metadata={'model': 'llama-3.1', 'length': 'medium'}
-)
-
-# 3. Usuario pregunta en chat
-log_interaction(
-    user=user,
-    interaction_type='CHAT',
-    notebook=calculo_notebook,
-    document=document,
-    content="¿Cómo se calcula la derivada de x^2?",
-    ai_response="La derivada de x^2 es 2x...",
-    tokens_used=150,
-    context_snapshot={
-        'topic': 'derivatives',
-        'previous_questions': ['what is a derivative?', 'chain rule example']
-    }
-)
-
-# 4. Una semana después, usuario vuelve
-# El chatbot puede decir:
-# "Bienvenido de vuelta. La semana pasada estuviste estudiando 
-#  derivadas en Cálculo II. ¿Quieres continuar o empezar algo nuevo?"
-```
-
-### Ventajas:
-1. **Memoria a largo plazo:** El bot "recuerda" todo
-2. **Contexto acumulativo:** Aprende cómo estudias
-3. **Referencias futuras:** "Como vimos la semana pasada..."
-4. **Analytics:** Patrones de estudio, horarios, temas favoritos
-5. **Recomendaciones:** Basadas en tu historial
-
----
-
-## 📦 Estructura del Proyecto
+## Project Structure
 
 ```
 PDF_IA_Rework/
-│
-├── README.md
-├── STACK_TECNOLOGICO.md    # Tecnologías y decisiones
-├── ROADMAP.md              # Plan de implementación detallado
-├── PDF_IA_REWORK_PLAN.md   # Plan original (referencia)
-├── docker-compose.yml
-├── .gitignore
-│
 ├── backend/
-│   ├── manage.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   ├── .env.example
-│   │
-│   ├── config/                # Settings Django
-│   │   ├── __init__.py
+│   ├── config/
 │   │   ├── settings/
-│   │   │   ├── __init__.py
 │   │   │   ├── base.py
 │   │   │   ├── development.py
 │   │   │   └── production.py
 │   │   ├── urls.py
 │   │   ├── wsgi.py
 │   │   └── asgi.py
-│   │
-│   └── apps/
-│       ├── users/          # Autenticación, roles, permisos
-│       ├── notebooks/      # Notebooks dinámicos
-│       ├── interactions/   # Tracking completo (CLAVE)
-│       ├── documents/      # PDFs, upload, processing
-│       ├── chat/           # Chat con IA, historial
-│       └── core/           # Utilidades compartidas
-│
-└── frontend/
-    ├── package.json
-    ├── vite.config.js
-    ├── Dockerfile
-    │
-    └── src/
-        ├── components/
-        │   ├── auth/       # Login, Register
-        │   ├── dashboard/  # Layout principal
-        │   ├── documents/  # Upload, lista, viewer
-        │   ├── chat/       # Chat window
-        │   └── notebooks/  # Gestión de notebooks
-        ├── pages/
-        ├── services/       # API calls
-        ├── context/        # React Context
-        └── hooks/          # Custom hooks
+│   ├── apps/
+│   │   ├── users/             # Auth, roles, plans, subscriptions
+│   │   ├── notebooks/         # Notebook CRUD
+│   │   ├── documents/         # Upload, processing, management
+│   │   ├── chat/              # Messages, RAG, AI
+│   │   ├── core/              # LLM service, file processor, DIP
+│   │   └── interactions/      # Tracking (WIP)
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── pages/             # 8 pages
+│   │   ├── components/        # 8 components
+│   │   ├── hooks/             # 6 custom hooks
+│   │   ├── stores/            # 4 Zustand stores
+│   │   ├── api/               # Axios client + services
+│   │   └── types/             # TypeScript definitions
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── Dockerfile
+│   └── .env.example
+├── docker-compose.yml
+├── setup.sh
+├── start.sh
+├── SCRIPTS_GUIDE.md
+├── .gitignore
+├── README.md
+└── docs/
+    ├── ARCHITECTURE_DIAGRAMS.md
+    ├── ESTADO_PROYECTO.md
+    ├── IMPROVEMENT_PLAN.md
+    ├── PHASE_7_SIMPLIFIED.md
+    ├── PHASE_7_PRODUCTION_ROADMAP.md
+    └── ...
 ```
 
 ---
 
-## 🚀 Siguiente Paso Inmediato
+## Current Status
 
-### Opción A: **Comenzar Implementación** 🛠️
+### ✅ Completed (Fase 5 → 7)
 
-Si dices **"adelante"**, empiezo con:
+- Full backend API with 57+ passing tests (1,256 lines)
+- React 19 frontend with 8 pages, 8 components, 6 hooks, 4 stores
+- JWT authentication with token refresh and role-based access
+- Notebook CRUD with dynamic creation and per-notebook isolation
+- Multi-format document upload (PDF, DOCX, TXT, images + OCR)
+- AI Chat with RAG context via Groq API (3 model options)
+- User LLM settings (model, temperature, max tokens)
+- DIP architecture with service layer and abstract base classes
+- Docker Compose with PostgreSQL 15
 
-1. **Crear estructura de backend:**
-   ```bash
-   mkdir -p PDF_IA_Rework/backend
-   cd PDF_IA_Rework/backend
-   python3 -m venv venv
-   source venv/bin/activate
-   django-admin startproject config .
-   ```
+### 🔜 Upcoming
 
-2. **Crear docker-compose.yml:**
-   - PostgreSQL 15 (puerto 5434)
-   - Redis (puerto 6380)
-   - Backend (puerto 8001)
-   - Frontend (puerto 5174)
-
-3. **Configurar settings.py:**
-   - Separar en base.py, development.py, production.py
-   - Configurar DRF
-   - Configurar JWT
-   - Configurar CORS
-
-4. **Crear apps iniciales:**
-   ```bash
-   python manage.py startapp users apps/users
-   python manage.py startapp notebooks apps/notebooks
-   python manage.py startapp interactions apps/interactions
-   # etc.
-   ```
-
-**¿Empiezo con esto?** → Di "adelante FASE 1"
+- Interactions app — full tracking system for analytics
+- Async Groq API calls — non-blocking AI responses
+- Rate limiting — per-user request throttling
+- Production deployment — gunicorn + nginx + SSL
+- Real-time collaboration
+- Payment integration (Stripe)
 
 ---
 
-### Opción B: **Esperar Mockup del Frontend** 🎨
+## Troubleshooting
 
-Si prefieres primero diseñar la UI:
-- Creas el mockup en Figma/Excalidraw/etc.
-- Me lo compartes
-- Adapto el plan de FASE 7 (Frontend) según tu diseño
-- Luego empezamos con backend
-
-**¿Haces mockup primero?** → Di "primero mockup"
-
----
-
-### Opción C: **Aclarar Dudas** ❓
-
-Si tienes preguntas sobre:
-- Stack tecnológico
-- Arquitectura de datos
-- Roadmap
-- Cualquier otra cosa
-
-**¿Tienes dudas?** → Pregúntame
+| Issue | Solution |
+|-------|----------|
+| Backend won't start | Run `python manage.py migrate` |
+| API 404 errors | Check `CORS_ALLOWED_ORIGINS` in backend `.env` |
+| Node modules too large | Use `--legacy-peer-deps` flag |
+| Groq API not working | Verify key at https://console.groq.com/keys |
+| File upload fails | Check file size (max 10MB) and format (PDF/DOCX/TXT/IMG) |
 
 ---
 
-## 📊 Comparación Rápida: PDF_IA vs PDF_IA_Rework
+## License
 
-| Feature | PDF_IA (FastAPI) | PDF_IA_Rework (Django) |
-|---------|------------------|------------------------|
-| Backend | FastAPI | Django + DRF |
-| Auth | JWT manual | djangorestframework-simplejwt |
-| Admin Panel | ❌ | ✅ Django Admin |
-| Users | Básico | Roles (Free/Premium/Admin) |
-| Notebooks | 4 estáticos | Dinámicos (ilimitados) |
-| Interactions | ❌ | ✅ Tracking completo |
-| Payments | ❌ | ✅ Stripe |
-| OCR | ❌ | ✅ Tesseract + Google |
-| Limits | ❌ | ✅ Por plan |
-| Multi-file | Solo PDF | PDF + Word + Imágenes |
-
----
-
-## 💡 Recomendaciones
-
-### Ahora:
-1. **Empezar con backend** (FASE 1-4) para tener base sólida
-2. **Hacer mockup en paralelo** (puedes diseñar mientras codifico)
-3. **No tener prisa** (vas paso a paso, bien hecho)
-
-### Más adelante:
-1. **Tests desde el principio** (no dejar para el final)
-2. **Commits frecuentes** (git cada feature)
-3. **Documentar decisiones** (README actualizado)
-
----
-
-## 📝 Status Actual
-
-- ✅ Stack tecnológico definido
-- ✅ Arquitectura diseñada
-- ✅ Roadmap completo
-- ✅ Bases de datos separadas (no conflicto con PDF_IA)
-- ✅ Puertos separados (correr en paralelo)
-- ⏳ Esperando decisión de inicio
-- ⏳ Esperando mockup del frontend
-
----
-
-## ❓ ¿Qué falta definir?
-
-Nada crítico. Todo está listo para empezar.
-
-**Opcional:**
-- Nombre de dominio (si vas a deployar)
-- Logo/branding
-- Textos de bienvenida
-- Email de soporte
-
-Pero eso puede hacerse después.
-
----
-
-## 🎯 Tu Decisión
-
-**¿Qué hacemos?**
-
-1. **"adelante FASE 1"** → Empiezo con configuración inicial
-2. **"primero mockup"** → Espero tu diseño de UI
-3. **"tengo dudas sobre X"** → Respondo tus preguntas
-4. **"cambiemos Y por Z"** → Ajustamos el plan
-
----
-
-**Estoy listo cuando tú lo estés** 🚀
-
-No hay prisa. Vamos paso a paso, pero firmes.
+MIT
