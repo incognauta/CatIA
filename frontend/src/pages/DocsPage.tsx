@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNotebooks } from '@hooks/useNotebooks'
 import { apiClient } from '@api/client'
 import { File, Calendar, HardDrive, Download, Trash2, Search, ChevronDown, Folder } from 'lucide-react'
@@ -10,6 +11,7 @@ interface DocumentsByNotebook {
 }
 
 export default function DocsPage() {
+  const { t, i18n } = useTranslation()
   const { notebooks, isLoading: notebooksLoading } = useNotebooks()
   const [allDocuments, setAllDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,7 +103,8 @@ export default function DocsPage() {
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
-    return new Intl.DateTimeFormat('es-ES', {
+    const lang = i18n?.language || 'es'
+    return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -133,7 +136,7 @@ export default function DocsPage() {
     return (
       <div className="p-8 max-w-7xl mx-auto">
         <div className="flex items-center justify-center h-96">
-          <p className="text-catia-light/60">Cargando documentos...</p>
+          <p className="text-catia-light/60">{t('docs.loading')}</p>
         </div>
       </div>
     )
@@ -143,8 +146,8 @@ export default function DocsPage() {
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-catia-light mb-2">Documentos</h1>
-        <p className="text-catia-light/60">Gestiona todos tus documentos organizados por notebooks</p>
+        <h1 className="text-3xl font-bold text-catia-light mb-2">{t('docs.title')}</h1>
+        <p className="text-catia-light/60">{t('docs.subtitle')}</p>
       </div>
 
       {/* Statistics */}
@@ -154,7 +157,7 @@ export default function DocsPage() {
             <div className="flex items-center gap-3">
               <File className="w-8 h-8 text-catia-purple" />
               <div>
-                <p className="text-catia-light/60 text-sm">Total de Documentos</p>
+                <p className="text-catia-light/60 text-sm">{t('docs.totalDocuments')}</p>
                 <p className="text-2xl font-bold text-catia-light">{totalDocuments}</p>
               </div>
             </div>
@@ -163,7 +166,7 @@ export default function DocsPage() {
             <div className="flex items-center gap-3">
               <HardDrive className="w-8 h-8 text-catia-gold" />
               <div>
-                <p className="text-catia-light/60 text-sm">Espacio Total Utilizado</p>
+                <p className="text-catia-light/60 text-sm">{t('docs.totalSpace')}</p>
                 <p className="text-2xl font-bold text-catia-light">{formatFileSize(totalSize)}</p>
               </div>
             </div>
@@ -179,7 +182,7 @@ export default function DocsPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar documentos..."
+            placeholder={t('docs.search')}
             className="w-full bg-catia-dark/50 border border-catia-purple/30 rounded-lg pl-10 pr-4 py-2 text-catia-light placeholder:text-catia-light/40 focus:outline-none focus:border-catia-purple"
           />
         </div>
@@ -188,9 +191,9 @@ export default function DocsPage() {
           onChange={(e) => setSortBy(e.target.value as any)}
           className="bg-catia-dark/50 border border-catia-purple/30 rounded-lg px-4 py-2 text-catia-light focus:outline-none focus:border-catia-purple"
         >
-          <option value="date">Más Recientes</option>
-          <option value="name">Nombre (A-Z)</option>
-          <option value="size">Tamaño (Mayor)</option>
+          <option value="date">{t('docs.sortByDate')}</option>
+          <option value="name">{t('docs.sortByName')}</option>
+          <option value="size">{t('docs.sortBySize')}</option>
         </select>
       </div>
 
@@ -199,12 +202,12 @@ export default function DocsPage() {
         <div className="bg-catia-dark/40 border border-catia-purple/20 rounded-xl p-12 text-center">
           <File className="w-16 h-16 text-catia-purple/30 mx-auto mb-4" />
           <h3 className="text-catia-light font-semibold mb-2">
-            {searchTerm ? 'No se encontraron documentos' : 'No hay documentos'}
+            {searchTerm ? t('docs.notFound') : t('docs.noDocuments')}
           </h3>
           <p className="text-catia-light/60">
             {searchTerm
-              ? 'Intenta con otro término de búsqueda'
-              : 'Crea un notebook y carga documentos para comenzar'}
+              ? t('docs.notFoundDesc')
+              : t('docs.noDocumentsDesc')}
           </p>
         </div>
       ) : (
@@ -227,7 +230,7 @@ export default function DocsPage() {
                 <Folder className="w-5 h-5 text-catia-gold" />
                 <div className="flex-1 text-left">
                   <h3 className="text-catia-light font-semibold">{notebook.name}</h3>
-                  <p className="text-catia-light/50 text-sm">{documents.length} documento(s)</p>
+                  <p className="text-catia-light/50 text-sm">{documents.length} {t('docs.documents')}</p>
                 </div>
                 {notebook.description && (
                   <p className="text-catia-light/60 text-sm hidden md:block">{notebook.description}</p>
@@ -263,7 +266,7 @@ export default function DocsPage() {
                               {doc.pages > 0 && (
                                 <div className="flex items-center gap-1">
                                   <File className="w-4 h-4" />
-                                  {doc.pages} página(s)
+                                  {doc.pages} {t('docs.documents')}
                                 </div>
                               )}
                               {doc.is_scanned && (
@@ -317,10 +320,10 @@ export default function DocsPage() {
               <div className="p-6 bg-catia-dark/60">
                 <h3 className="text-catia-light font-semibold flex items-center gap-2">
                   <Folder className="w-5 h-5 text-yellow-500" />
-                  Documentos sin clasificar
+                  {t('docs.title')}
                 </h3>
                 <p className="text-catia-light/50 text-sm mt-1">
-                  {filteredUngroupedDocuments.length} documento(s)
+                  {filteredUngroupedDocuments.length} {t('docs.documents')}
                 </p>
               </div>
 
@@ -377,8 +380,8 @@ export default function DocsPage() {
           {filteredByNotebook.length === 0 && filteredUngroupedDocuments.length === 0 && searchTerm && (
             <div className="bg-catia-dark/40 border border-catia-purple/20 rounded-xl p-12 text-center">
               <File className="w-16 h-16 text-catia-purple/30 mx-auto mb-4" />
-              <h3 className="text-catia-light font-semibold mb-2">No se encontraron documentos</h3>
-              <p className="text-catia-light/60">Intenta con otro término de búsqueda</p>
+              <h3 className="text-catia-light font-semibold mb-2">{t('docs.notFound')}</h3>
+              <p className="text-catia-light/60">{t('docs.notFoundDesc')}</p>
             </div>
           )}
         </>

@@ -32,6 +32,7 @@ class DjangoChatService(ChatServiceBase):
         notebook_id: str,
         message: str,
         system_prompt: Optional[str] = None,
+        language: str = 'es',
     ) -> Dict:
         """
         Procesar pregunta del usuario: RAG + LLM + persistencia
@@ -50,6 +51,7 @@ class DjangoChatService(ChatServiceBase):
             notebook_id: ID del notebook
             message: Mensaje del usuario
             system_prompt: Prompt del sistema opcional
+            language: Idioma de la respuesta ('es' o 'en')
         
         Returns:
             Dict con resultado del chat
@@ -137,6 +139,7 @@ class DjangoChatService(ChatServiceBase):
                 model_override=model_override,
                 temperature_override=temperature_override,
                 max_tokens_override=max_tokens_override,
+                language=language,
             )
         except Exception as e:
             logger.error(f"Error en LLM: {e}")

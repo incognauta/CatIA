@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from pgvector.django import VectorField
 
 
 class Document(models.Model):
@@ -73,3 +74,41 @@ class Document(models.Model):
     
     def __str__(self):
         return f"{self.title} (notebook: {self.notebook.name})"
+
+
+class DocumentChunk(models.Model):
+    """
+    Fragmento de documento con embedding vectorial para búsqueda semántica.
+
+    Cada chunk contiene una porción del documento original y su vector
+    de embedding (384 dimensiones) para búsqueda por similitud coseno.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name='chunks'
+    )
+    chunk_index = models.IntegerField(
+        help_text="Índice del chunk dentro del documento"
+    )
+    content = models.TextField(
+        help_text="Contenido textual de este fragmento"
+    )
+    embedding = VectorField(
+        dimensions=384,
+        null=True,
+        blank=True,
+        help_text="Vector de embedding (384 dimensiones)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'documents'
+        ordering = ['document', 'chunk_index']
+        indexes = [
+            models.Index(fields=['document', 'chunk_index']),
+        ]
+
+    def __str__(self):
+        return f"Chunk {self.chunk_index} de {self.document.title}"

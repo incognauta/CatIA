@@ -17,6 +17,7 @@ from .base import (
     NotebookServiceBase,
 )
 from .factory import LLMServiceFactory
+from .embedding_service import EmbeddingService, get_embedding_service
 
 __all__ = [
     # Interfaces
@@ -28,4 +29,7 @@ __all__ = [
     'NotebookServiceBase',
     # Factory
     'LLMServiceFactory',
+    # Embeddings
+    'EmbeddingService',
+    'get_embedding_service',
 ]

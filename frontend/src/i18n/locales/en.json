@@ -1,0 +1,143 @@
+{
+  "auth": {
+    "subtitle": "Intelligent chat with your documents",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "loggingIn": "Logging in...",
+    "loginError": "Login error",
+    "noAccount": "Don't have an account?",
+    "register": "Sign up here",
+    "registerTitle": "Create Account",
+    "registerSubtitle": "Join CatIA and start using AI with your documents",
+    "username": "Username",
+    "confirmPassword": "Confirm password",
+    "createAccount": "Create Account",
+    "creatingAccount": "Creating account...",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginHere": "Login here",
+    "registerError": "Registration error",
+    "passwordMismatch": "Passwords do not match",
+    "requiredFields": "Please fill in all required fields"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "logout": "Logout"
+  },
+  "nav": {
+    "chat": "Chat",
+    "documents": "Documents",
+    "notebooks": "Notebooks",
+    "settings": "Settings",
+    "help": "Help"
+  },
+  "chat": {
+    "title": "Chat with Your Documents",
+    "selectNotebook": "Select a notebook",
+    "typeMessage": "Type your question...",
+    "send": "Send",
+    "noMessages": "No messages yet",
+    "thinking": "CatIA is thinking...",
+    "errorSending": "Error sending message",
+    "notebookRequired": "You must select a notebook first"
+  },
+  "documents": {
+    "title": "Your Documents",
+    "upload": "Upload Document",
+    "noDocuments": "No documents",
+    "fileName": "Name",
+    "fileSize": "Size",
+    "uploadedDate": "Date",
+    "delete": "Delete",
+    "dragDropText": "Drag files here or click to select",
+    "supportedFormats": "Supported formats: PDF, DOCX, TXT, PNG, JPG",
+    "maxSize": "Maximum size: 50MB"
+  },  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your profile and AI preferences",
+    "language": "Language",
+    "languageDesc": "Select the language for the interface and AI responses",
+    "spanish": "Spanish",
+    "english": "English",
+    "modelSettings": "Model Settings",
+    "model": "Model",
+    "temperature": "Temperature",
+    "maxTokens": "Maximum Tokens",
+    "temperatureHelp": "Higher value = more creative, lower = more precise",
+    "tokensHelp": "Maximum number of tokens in the response",
+    "saveSettings": "Save Settings",
+    "settingsSaved": "Settings saved"
+  },  "notebooks": {
+    "title": "My Notebooks",
+    "create": "Create Notebook",
+    "newNotebook": "New Notebook",
+    "notebookName": "Notebook Name",
+    "delete": "Delete",
+    "noNotebooks": "No notebooks"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "spanish": "Spanish",
+    "english": "English",
+    "modelSettings": "Model Settings",
+    "model": "Model",
+    "temperature": "Temperature",
+    "maxTokens": "Max Tokens",
+    "temperatureHelp": "Higher value = more creative, lower = more precise",
+    "tokensHelp": "Maximum tokens in the response",
+    "saveSettings": "Save Settings",
+    "settingsSaved": "Settings saved"
+  },
+  "help": {
+    "title": "Help",
+    "gettingStarted": "Getting Started",
+    "uploadDocuments": "Upload documents to a notebook",
+    "askQuestions": "Ask questions about your documents",
+    "viewHistory": "View your conversation history",
+    "customizeSettings": "Customize model settings"
+  },
+  "errors": {
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "notFound": "Not Found",
+    "serverError": "Server Error",
+    "tryAgain": "Try Again"
+  },
+  "docs": {
+    "title": "Documents",
+    "subtitle": "Manage all your documents organized by notebooks",
+    "loading": "Loading documents...",
+    "totalDocuments": "Total Documents",
+    "totalSpace": "Total Space Used",
+    "search": "Search documents...",
+    "sortByDate": "Most Recent",
+    "sortByName": "Name (A-Z)",
+    "sortBySize": "Size (Largest)",
+    "noDocuments": "No documents",
+    "noDocumentsDesc": "Create a notebook and upload documents to get started",
+    "notFound": "No documents found",
+    "notFoundDesc": "Try another search term",
+    "documents": "document(s)",
+    "pages": "page(s)"
+  },
+  "notebooks": {
+    "myNotebooks": "My Notebooks",
+    "subtitle": "Organize and manage your documents",
+    "nameNotebook": "Notebook name...",
+    "create": "Create",
+    "delete": "Delete",
+    "rename": "Rename",
+    "noNotebooks": "You don't have any notebooks yet",
+    "confirm": "Are you sure?",
+    "confirmDelete": "Are you sure you want to delete this notebook? This action cannot be undone.",
+    "confirmRename": "Rename notebook",
+    "title": "Unclassified Documents"
+  }
+}

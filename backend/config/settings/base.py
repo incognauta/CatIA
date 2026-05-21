@@ -165,13 +165,13 @@ DOCUMENT_CONFIG = {
     # Máximo de caracteres por documento en RAG context
     "MAX_CHARS_PER_DOCUMENT": config(
         "DOCUMENT_MAX_CHARS_PER_DOC",
-        default="1500",
+        default="10000",
         cast=int,
     ),
     # Máximo total de caracteres en contexto RAG
     "MAX_CHARS_TOTAL": config(
         "DOCUMENT_MAX_CHARS_TOTAL",
-        default="5000",
+        default="30000",
         cast=int,
     ),
     # Usar búsqueda semántica para seleccionar fragmentos relevantes
@@ -183,13 +183,41 @@ DOCUMENT_CONFIG = {
     # Tamaño de chunks para chunking inteligente
     "CHUNK_SIZE": config(
         "DOCUMENT_CHUNK_SIZE",
-        default="500",
+        default="2000",
         cast=int,
     ),
     # Overlap entre chunks para contexto
     "CHUNK_OVERLAP": config(
         "DOCUMENT_CHUNK_OVERLAP",
-        default="50",
+        default="200",
+        cast=int,
+    ),
+}
+
+# ═══════════════════════════════════════════════════════════
+# Configuración de Embeddings (Fase 2 - Búsqueda Semántica)
+# ═══════════════════════════════════════════════════════════
+
+EMBEDDING_CONFIG = {
+    "DIMENSIONS": 384,
+    "MODEL": config(
+        "EMBEDDING_MODEL",
+        default="tfidf-svd",
+        cast=str,
+    ),
+    "CHUNK_SIZE": config(
+        "EMBEDDING_CHUNK_SIZE",
+        default="2000",
+        cast=int,
+    ),
+    "CHUNK_OVERLAP": config(
+        "EMBEDDING_CHUNK_OVERLAP",
+        default="200",
+        cast=int,
+    ),
+    "TOP_K": config(
+        "EMBEDDING_TOP_K",
+        default="10",
         cast=int,
     ),
 }

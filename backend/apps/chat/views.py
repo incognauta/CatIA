@@ -108,7 +108,8 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         {
             "notebook": "uuid-del-notebook",
             "message": "Tu pregunta aqui",
-            "system_prompt": "Sistema prompt opcional"
+            "system_prompt": "Sistema prompt opcional",
+            "language": "es" or "en"  (optional, default: "es")
         }
         """
         
@@ -116,6 +117,7 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         notebook_id = request.data.get('notebook')
         message = request.data.get('message', '').strip()
         system_prompt = request.data.get('system_prompt')
+        language = request.data.get('language', 'es')
         
         if not notebook_id:
             return Response(
@@ -129,6 +131,10 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Validar que language sea válido
+        if language not in ['es', 'en']:
+            language = 'es'
+        
         # Usar servicio de chat para procesar la pregunta
         try:
             chat_service = get_chat_service()
@@ -137,6 +143,7 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
                 notebook_id=str(notebook_id),
                 message=message,
                 system_prompt=system_prompt,
+                language=language,
             )
             
             return Response(result, status=status.HTTP_201_CREATED)

@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@hooks/useAuth'
 import { Mail, Lock, Loader, User } from 'lucide-react'
 
 export default function RegisterPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { register, isLoading, error } = useAuth()
   const [formData, setFormData] = useState({
@@ -30,13 +32,13 @@ export default function RegisterPage() {
 
     // Validar que las contraseñas coincidan
     if (formData.password !== formData.passwordConfirm) {
-      setFormError('Las contraseñas no coinciden')
+      setFormError(t('auth.passwordMismatch'))
       return
     }
 
     // Validar que todos los campos obligatorios estén llenos
     if (!formData.email || !formData.password || !formData.username) {
-      setFormError('Por favor completa todos los campos obligatorios')
+      setFormError(t('auth.requiredFields'))
       return
     }
 
@@ -60,7 +62,7 @@ export default function RegisterPage() {
               🐱 CatIA
             </span>
           </h1>
-          <p className="text-catia-light/60">Crea tu cuenta</p>
+          <p className="text-catia-light/60">{t('auth.registerSubtitle')}</p>
         </div>
 
         {/* Form */}
@@ -77,7 +79,7 @@ export default function RegisterPage() {
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-catia-light mb-2">
-              Email *
+              {t('auth.email')} *
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 w-5 h-5 text-catia-gold/50" />
@@ -96,7 +98,7 @@ export default function RegisterPage() {
           {/* Username */}
           <div>
             <label className="block text-sm font-medium text-catia-light mb-2">
-              Usuario *
+              {t('auth.username')} *
             </label>
             <div className="relative">
               <User className="absolute left-3 top-3 w-5 h-5 text-catia-gold/50" />
@@ -145,7 +147,7 @@ export default function RegisterPage() {
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-catia-light mb-2">
-              Contraseña *
+              {t('auth.password')} *
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-catia-gold/50" />
@@ -164,7 +166,7 @@ export default function RegisterPage() {
           {/* Confirm Password */}
           <div>
             <label className="block text-sm font-medium text-catia-light mb-2">
-              Confirmar contraseña *
+              {t('auth.confirmPassword')} *
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-catia-gold/50" />
@@ -187,12 +189,12 @@ export default function RegisterPage() {
             className="w-full bg-gradient-to-r from-catia-purple to-catia-pink hover:from-catia-purple/80 hover:to-catia-pink/80 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 mt-6"
           >
             {isLoading && <Loader className="w-4 h-4 animate-spin" />}
-            {isLoading ? 'Creando cuenta...' : 'Registrarse'}
+            {isLoading ? t('auth.creatingAccount') : t('auth.register')}
           </button>
 
           {/* Footer */}
           <p className="text-center text-sm text-catia-light/50">
-            ¿Ya tienes cuenta?{' '}
+            {t('auth.alreadyHaveAccount')}{' '}
             <button
               type="button"
               onClick={() => navigate('/login')}

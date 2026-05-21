@@ -51,25 +51,41 @@ class GroqLLMService(LLMServiceBase):
         model_override: Optional[str] = None,
         temperature_override: Optional[float] = None,
         max_tokens_override: Optional[int] = None,
+        language: str = 'es',
     ) -> Dict:
         """Implementación de generate_response para Groq"""
         
         try:
-            # Usar defaults o valores especificados
-            system_prompt = system_prompt or (
-                "Eres un asistente educativo especializado en análisis de documentos. "
-                "Proporciona respuestas claras, concisas y fundamentadas en el contexto suministrado."
-            )
+            # Construir system_prompt según el idioma
+            if system_prompt is None:
+                if language == 'en':
+                    system_prompt = (
+                        "You are an expert educational assistant specialized in document analysis. "
+                        "Provide clear, concise, and well-founded responses based on the supplied context. "
+                        "Always respond in English."
+                    )
+                else:  # 'es' o cualquier otro idioma por defecto
+                    system_prompt = (
+                        "Eres un asistente educativo especializado en análisis de documentos. "
+                        "Proporciona respuestas claras, concisas y fundamentadas en el contexto suministrado. "
+                        "Siempre responde en Español."
+                    )
+            elif language == 'en':
+                # Si hay custom system_prompt, agregar instrucción de idioma
+                system_prompt = f"{system_prompt}\n\nAlways respond in English."
+            else:
+                system_prompt = f"{system_prompt}\n\nSiempre responde en Español."
             
             context_documents = context_documents or []
             conversation_history = conversation_history or []
             
-            # Construir contexto RAG
-            rag_service = GroqRAGService()
+            # Construir contexto RAG (semántico con fallback a keyword)
+            from .rag_semantic_service import SemanticRAGService
+            rag_service = SemanticRAGService()
             rag_context = rag_service.build_context(
                 documents=context_documents,
                 query=user_message,
-                max_chars=settings.DOCUMENT_CONFIG.get('MAX_CHARS_TOTAL', 3000)
+                max_chars=settings.DOCUMENT_CONFIG.get('MAX_CHARS_TOTAL', 30000)
             )
             
             # Construir mensajes
@@ -187,7 +203,7 @@ class GroqRAGService(RAGServiceBase):
             
             if content:
                 # Dividir en chunks pequeños
-                chunks = self._split_text(content, chunk_size=500)
+                chunks = self._split_text(content, chunk_size=2000)
                 for chunk in chunks:
                     all_chunks.append({
                         'title': title,
@@ -198,7 +214,7 @@ class GroqRAGService(RAGServiceBase):
         relevant_chunks = self.find_relevant_chunks(
             chunks=[c['content'] for c in all_chunks],
             query=query,
-            top_k=5
+            top_k=10
         )
         
         # Construir contexto formateado
@@ -230,7 +246,7 @@ class GroqRAGService(RAGServiceBase):
         self,
         chunks: List[str],
         query: str,
-        top_k: int = 5
+        top_k: int = 10
     ) -> List[str]:
         """
         Encontrar chunks relevantes basado en keyword matching
@@ -251,7 +267,7 @@ class GroqRAGService(RAGServiceBase):
             matches = sum(1 for word in query_words if word in chunk_lower)
             
             # Bonus por longitud (más contenido = más útil)
-            length_score = min(len(chunk) / 100, 5)
+            length_score = min(len(chunk) / 200, 5)
             
             # Score final
             score = matches + length_score
@@ -263,7 +279,7 @@ class GroqRAGService(RAGServiceBase):
         return [chunk for chunk, _ in scored_chunks[:top_k]]
     
     @staticmethod
-    def _split_text(text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
+    def _split_text(text: str, chunk_size: int = 2000, overlap: int = 200) -> List[str]:
         """Dividir texto en chunks con overlap"""
         chunks = []
         start = 0

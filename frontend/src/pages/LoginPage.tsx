@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@hooks/useAuth'
 import { Mail, Lock, Loader } from 'lucide-react'
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { login, isLoading, error } = useAuth()
   const [email, setEmail] = useState('testuser@example.com')
@@ -24,7 +26,7 @@ export default function LoginPage() {
               🐱 CatIA
             </span>
           </h1>
-          <p className="text-catia-light/60">Chat inteligente con tus documentos</p>
+          <p className="text-catia-light/60">{t('auth.subtitle')}</p>
         </div>
 
         {/* Form */}
@@ -34,14 +36,14 @@ export default function LoginPage() {
         >
           {error && (
             <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-2 rounded-lg text-sm">
-              Error en login
+              {t('auth.loginError')}
             </div>
           )}
 
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-catia-light mb-2">
-              Email
+              {t('auth.email')}
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 w-5 h-5 text-catia-gold/50" />
@@ -58,7 +60,7 @@ export default function LoginPage() {
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-catia-light mb-2">
-              Contraseña
+              {t('auth.password')}
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-catia-gold/50" />
@@ -79,18 +81,18 @@ export default function LoginPage() {
             className="w-full bg-gradient-to-r from-catia-purple to-catia-pink hover:from-catia-purple/80 hover:to-catia-pink/80 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2"
           >
             {isLoading && <Loader className="w-4 h-4 animate-spin" />}
-            {isLoading ? 'Ingresando...' : 'Ingresar'}
+            {isLoading ? t('auth.loggingIn') : t('auth.login')}
           </button>
 
           {/* Footer */}
           <p className="text-center text-sm text-catia-light/50">
-            ¿No tienes cuenta?{' '}
+            {t('auth.noAccount')}{' '}
             <button
               type="button"
               onClick={() => navigate('/register')}
               className="text-catia-purple hover:text-catia-pink transition-colors"
             >
-              Regístrate aquí
+              {t('auth.register')}
             </button>
           </p>
         </form>

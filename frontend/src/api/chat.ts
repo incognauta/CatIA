@@ -8,11 +8,12 @@ export const chatAPI = {
   getHistory: (notebookId: string) =>
     apiClient.get<ChatMessage[]>(`/chat/history/?notebook=${notebookId}`),
   
-  askAI: (notebookId: string, message: string, systemPrompt?: string) =>
+  askAI: (notebookId: string, message: string, systemPrompt?: string, language?: string) =>
     apiClient.post<AskAIResponse>('/chat/ask_ai/', {
       notebook: notebookId,
       message,
       system_prompt: systemPrompt,
+      language: language || 'es',
     }),
   
   clearHistory: (notebookId: string) =>

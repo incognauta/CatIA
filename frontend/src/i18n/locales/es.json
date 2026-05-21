@@ -1,0 +1,91 @@
+{
+  "auth": {
+    "subtitle": "Chat inteligente con tus documentos",
+    "email": "Email",
+    "password": "Contraseña",
+    "login": "Ingresar",
+    "loggingIn": "Ingresando...",
+    "loginError": "Error en login",
+    "noAccount": "¿No tienes cuenta?",
+    "register": "Regístrate aquí",
+    "registerTitle": "Crear Cuenta",
+    "registerSubtitle": "Únete a CatIA y comienza a usar IA en tus documentos",
+    "username": "Usuario",
+    "confirmPassword": "Confirmar contraseña",
+    "createAccount": "Crear Cuenta",
+    "creatingAccount": "Creando cuenta...",
+    "alreadyHaveAccount": "¿Ya tienes cuenta?",
+    "loginHere": "Inicia sesión aquí",
+    "registerError": "Error en registro",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "requiredFields": "Por favor completa todos los campos obligatorios"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "logout": "Cerrar sesión"
+  },
+  "nav": {
+    "chat": "Chat",
+    "documents": "Documentos",
+    "notebooks": "Notebooks",
+    "settings": "Configuración",
+    "help": "Ayuda"
+  },
+  "chat": {
+    "title": "Chat con tus Documentos",
+    "selectNotebook": "Selecciona un notebook",
+    "typeMessage": "Escribe tu pregunta...",
+    "send": "Enviar",
+    "noMessages": "No hay mensajes aún",
+    "thinking": "CatIA está pensando...",
+    "errorSending": "Error al enviar el mensaje",
+    "notebookRequired": "Debes seleccionar un notebook primero"
+  },
+  "documents": {
+    "title": "Tus Documentos",
+    "upload": "Subir documento",
+    "noDocuments": "No hay documentos",
+    "fileName": "Nombre",
+    "fileSize": "Tamaño",
+    "uploadedDate": "Fecha",
+    "delete": "Eliminar",
+    "dragDropText": "Arrastra archivos aquí o haz clic para seleccionar",
+    "supportedFormats": "Formatos soportados: PDF, DOCX, TXT, PNG, JPG",
+    "maxSize": "Tamaño máximo: 50MB"
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Personaliza tu perfil y preferencias de IA",
+    "language": "Idioma",
+    "languageDesc": "Selecciona el idioma de la interfaz y las respuestas de IA",
+    "spanish": "Español",
+    "english": "Inglés",
+    "modelSettings": "Configuración del Modelo",
+    "model": "Modelo",
+    "temperature": "Temperatura",
+    "maxTokens": "Máximo de Tokens",
+    "temperatureHelp": "Mayor valor = más creativo, menor = más preciso",
+    "tokensHelp": "Máxima cantidad de tokens en la respuesta",
+    "saveSettings": "Guardar Configuración",
+    "settingsSaved": "Configuración guardada"
+  },
+  "notebooks": {
+    "myNotebooks": "Mis Notebooks",
+    "subtitle": "Organiza y gestiona tus documentos",
+    "nameNotebook": "Nombre del notebook...",
+    "create": "Crear",
+    "delete": "Eliminar",
+    "rename": "Renombrar",
+    "noNotebooks": "No tienes notebooks aún",
+    "confirm": "¿Estás seguro?",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar este notebook? Esta acción no se puede deshacer.",
+    "confirmRename": "Renombrar notebook",
+    "title": "Documentos sin clasificar"
+  }
+}

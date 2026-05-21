@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Document
+from .models import Document, DocumentChunk
 
 
 @admin.register(Document)
@@ -41,3 +41,17 @@ class DocumentAdmin(admin.ModelAdmin):
             size_bytes /= 1024
         return f"{size_bytes:.1f} TB"
     file_size_display.short_description = 'Tamaño'
+
+
+@admin.register(DocumentChunk)
+class DocumentChunkAdmin(admin.ModelAdmin):
+    """Admin para DocumentChunk"""
+
+    list_display = ('id', 'document', 'chunk_index', 'content_preview', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('content', 'document__title')
+    readonly_fields = ('id', 'created_at')
+
+    def content_preview(self, obj):
+        return obj.content[:80] + '...' if len(obj.content) > 80 else obj.content
+    content_preview.short_description = 'Contenido'

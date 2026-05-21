@@ -92,7 +92,7 @@ def split_into_chunks(
 def find_relevant_chunks(
     chunks: List[str],
     query: str,
-    top_k: int = 3,
+    top_k: int = 10,
 ) -> List[Tuple[str, float]]:
     """
     Encontrar chunks relevantes a la query usando búsqueda de keywords.

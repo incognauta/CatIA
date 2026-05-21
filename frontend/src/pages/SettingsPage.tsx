@@ -1,11 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@stores/authStore'
 import { useLLMSettings } from '@hooks/useLLMSettings'
-import { Save, Mail, User, Lock, Zap } from 'lucide-react'
+import { Save, Mail, User, Lock, Zap, Globe } from 'lucide-react'
 
 export default function SettingsPage() {
   const { user } = useAuthStore()
   const { settings, defaults, loading, error, saving, updateSettings } = useLLMSettings()
+  const { i18n, t } = useTranslation()
+  
+  // Track language changes for re-render
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || 'es')
+  
+  // Update local language state when i18n changes
+  useEffect(() => {
+    const handleLanguageChange = (lng: string) => {
+      setSelectedLanguage(lng)
+    }
+    i18n.on('languageChanged', handleLanguageChange)
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange)
+    }
+  }, [i18n])
   
   // Profile state
   const [profileChanged, setProfileChanged] = useState(false)
@@ -53,8 +69,8 @@ export default function SettingsPage() {
     <div className="p-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-catia-light mb-2">Configuración</h1>
-        <p className="text-catia-light/60">Personaliza tu perfil y preferencias de IA</p>
+        <h1 className="text-3xl font-bold text-catia-light mb-2">{t('settings.title')}</h1>
+        <p className="text-catia-light/60">{t('settings.subtitle')}</p>
       </div>
 
       {/* Profile Section */}
@@ -122,6 +138,34 @@ export default function SettingsPage() {
               <Save className="w-4 h-4" />
               Guardar Cambios
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Language Section */}
+      <div className="bg-catia-dark/40 border border-catia-purple/20 rounded-xl p-6 mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Globe className="w-6 h-6 text-catia-pink" />
+          <h2 className="text-2xl font-bold text-catia-light">{t('settings.language')}</h2>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-catia-light text-sm font-semibold mb-2">{t('settings.language')}</label>
+            <select
+              value={selectedLanguage}
+              onChange={(e) => {
+                const lng = e.target.value
+                setSelectedLanguage(lng)
+                i18n.changeLanguage(lng)
+                localStorage.setItem('language', lng)
+              }}
+              className="w-full bg-catia-dark/50 border border-catia-purple/30 rounded-lg px-4 py-2 text-catia-light focus:outline-none focus:border-catia-purple"
+            >
+              <option value="es">{t('settings.spanish')}</option>
+              <option value="en">{t('settings.english')}</option>
+            </select>
+            <p className="text-catia-light/50 text-sm mt-2">{t('settings.languageDesc')}</p>
           </div>
         </div>
       </div>

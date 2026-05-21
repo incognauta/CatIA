@@ -1,8 +1,8 @@
 # 📊 Estado del Proyecto: Progreso vs Objetivos
 
-**Fecha de análisis:** 24 de marzo de 2026  
-**Versión:** 1.0  
-**Estado General:** 🟡 EN PROGRESO (Fase 3 completada, Fase 4 por iniciar)
+**Fecha de análisis:** 21 de enero de 2025  
+**Versión:** 3.0  
+**Estado General:** 🟢 **MVP FASE 5-7 COMPLETADO** — Aplicación lista para presentación
 
 ---
 
@@ -17,238 +17,288 @@ Aplicación de Chat con Documentos usando IA que permita a los usuarios:
 3. Registrarse y autenticarse
 4. Historial y almacenamiento de conversaciones
 5. Pasarela de pagos para limitar acceso
+6. [FASE 7] Soporte multiidioma (i18n) - Español/Inglés
 ```
 
 ---
 
-## 2. LOGROS COMPLETADOS ✅
+## 2. ESTADO GLOBAL POR FASES
+
+| Fase | Descripción | Estado | % |
+|------|-------------|--------|---|
+| **1** | Scaffold: Django, Docker, PostgreSQL, settings | ✅ Completado | 100% |
+| **2** | Modelos: User, UserProfile, signals, admin | ✅ Completado | 100% |
+| **3** | Auth: Register, Login, JWT, permisos | ✅ Completado | 100% |
+| **4A** | Modelos core: Notebook, Document, ChatMessage, Plan, UserSubscription | ✅ Completado | 100% |
+| **4B** | Procesamiento archivos: PDF, DOCX, TXT, imágenes, OCR, Markdown | ✅ Completado | 100% |
+| **4C** | Chat + Groq AI: RAG, chunking, historial, token tracking | ✅ Completado | 100% |
+| **5** | Frontend React 19: 32+ componentes, Zustand, TailwindCSS | ✅ Completado | 100% |
+| **6** | Mejoras técnicas: Settings LLM, RAG inteligente, chunking | ✅ Completado | 100% |
+| **7** | Internacionalización (i18n): Español/Inglés, Docker refinements | ✅ Completado | 100% |
+| **7** | Pagos (Stripe), deploy producción, features avanzadas | ❌ No iniciado | 0% |
+
+---
+
+## 3. LOGROS COMPLETADOS ✅
 
 ### Fase 1: Scaffold y Setup (100%)
 - ✅ Estructura Django con 6 apps modularizadas
-- ✅ PostgreSQL v15 con Docker
+- ✅ PostgreSQL 15 + pgvector con Docker
 - ✅ Settings separados (base/development/production)
 - ✅ docker-compose.yml funcional
 - ✅ Health check endpoint validado
-
-**Duración:** 1-2 días  
-**Resultado:** Base técnica sólida y reproducible
+- ✅ Scripts automatizados: `setup.sh` + `start.sh`
 
 ### Fase 2: Modelos y Base de Datos (100%)
 - ✅ Modelo `User` personalizado con roles (FREE/PREMIUM/ADMIN)
 - ✅ Modelo `UserProfile` con relación 1-a-1
-- ✅ Signals automáticos para crear profile
-- ✅ Admin Django customizado
+- ✅ Signals automáticos para crear profile + subscription
+- ✅ Admin Django customizado para cada modelo
 - ✅ 8+ tests pasando
-
-**Duración:** 1-2 días  
-**Resultado:** Estructura de usuarios validada
 
 ### Fase 3: Autenticación y Autorización (100%)
 - ✅ `RegisterView`: POST /api/v1/auth/register/ (201 Created)
 - ✅ `LoginView`: POST /api/v1/auth/login/ (200 OK + tokens)
 - ✅ `UserMeView`: GET /api/v1/users/me/ (autenticado)
-- ✅ JWT tokens (access + refresh)
-- ✅ Permisos básicos (IsAuthenticated)
+- ✅ JWT tokens (access + refresh) con SimpleJWT
+- ✅ Permisos (IsAuthenticated) + filtrado por usuario
 - ✅ 18+ tests pasando
 
-**Duración:** 1-2 días  
-**Resultado:** Auth completa y segura
+### Fase 4A: Modelos Core (100%)
+- ✅ `Notebook` — CRUD completo con slug único por usuario, color/icono personalizados
+- ✅ `Document` — UUID, FK a User/Notebook, content, file_type, file_size, pages
+- ✅ `ChatMessage` — role (user/assistant), content, tokens_used, FK a Notebook/Document
+- ✅ `Plan` — Planes de suscripción con límites (documentos, mensajes, tamaño)
+- ✅ `UserSubscription` — 1-to-1 con User, status, fechas, contadores de uso
+- ✅ Admin customizados con filtros, búsqueda y display optimizado
+
+### Fase 4B: Procesamiento de Archivos (100%)
+- ✅ Soporte multi-formato: PDF, TXT, DOCX, PNG, JPEG
+- ✅ Extracción de texto con PyPDF2 + pdf2image
+- ✅ OCR automático con Tesseract (español + inglés) para PDFs escaneados
+- ✅ Procesamiento de imágenes con pytesseract
+- ✅ Extracción de DOCX con python-docx
+- ✅ Conversión a Markdown
+- ✅ Validación de tipos MIME + límite de 50MB
+- ✅ Upload endpoint: `POST /api/v1/documents/upload/` (multipart)
+- ✅ 7+ tests de procesamiento
+
+### Fase 4C: Chat + Groq AI (100%)
+- ✅ Integración con Groq API (llama-3.1-8b-instant)
+- ✅ RAG context: selecciona top 5 documentos del notebook
+- ✅ Historial conversacional (últimos 10 mensajes)
+- ✅ Token tracking
+- ✅ Aislamiento de chat por notebook
+- ✅ Endpoints: `POST /api/v1/chat/ask_ai/`, `GET /chat/history/`, `DELETE /chat/clear_history/`
+- ✅ 13+ tests de chat
+
+### Fase 5: Frontend React 19 (100%)
+- ✅ 32+ componentes con TypeScript + TailwindCSS
+- ✅ Zustand con persistencia (3 stores: auth, chat, notebook)
+- ✅ JWT interceptor con auto-logout en 401
+- ✅ Notebook CRUD con creación dinámica
+- ✅ Document upload & management
+- ✅ Per-notebook chat con respuestas IA
+- ✅ Auto-save markdown (2 segundos debounce)
+- ✅ Chat isolation per notebook (sin cross-contamination)
+- ✅ Paleta CatIA personalizada (purple #7C3AED / pink #EC4899)
+- ✅ Custom hooks: useAuth, useNotebooks, useChat, useDocuments
+- ✅ React Router con rutas protegidas
 
 ---
 
-## 3. ESTADO ACTUAL DEL PROYECTO (FASE 4)
+## 4. MEJORAS TÉCNICAS IMPLEMENTADAS (FASE 6)
 
-### 3.1 Lo que FUNCIONA hoy
+### 4.1 Configuración Centralizada ✅
+- `GROQ_CONFIG` — Modelo, max_tokens, temperatura, API key configurables vía env vars
+- `DOCUMENT_CONFIG` — Chunk size, overlap, max chars, semantic search toggle
+- Todo configurable sin tocar código
 
-| Componente | Estado | Endpoint |
-|---|---|---|
-| Django Setup | ✅ Activo | - |
-| PostgreSQL | ✅ Activo | - |
-| Usuarios | ✅ Completo | POST /auth/register/, POST /auth/login/, GET /users/me/ |
-| Admin Panel | ✅ Accesible | /admin/ |
-| JWT Auth | ✅ Completo | Bearer tokens + refresh |
-| Health Check | ✅ Activo | GET /health/ |
-| Estructura Apps | ✅ Óptima | `apps/[users, notebooks, documents, chat, interactions, core]` |
+### 4.2 Sistema de Configuración LLM por Usuario ✅
+- `UserLLMSettings` — Modelo 1-to-1 con User (modelo, temperatura, max_tokens)
+- API `/api/v1/llm-settings/` — CRUD + defaults + reset
+- Frontend `ChatSettings.tsx` con selector de modelo, slider temperatura, slider tokens
+- 4 modelos Groq disponibles: Llama 3.1 8B/70B, Mixtral 8x7B, Gemma 7B
 
-### 3.2 Lo que FALTA (Fase 4 - MVP HÍBRIDO)
+### 4.3 RAG Inteligente con Chunking ✅
+- `split_into_chunks()` — División con overlap configurable
+- `find_relevant_chunks()` — Scoring por keywords + posición + longitud
+- Búsqueda semántica de fragmentos relevantes a la query
+- Singleton thread-safe con `@lru_cache`
 
-| Componente | Prioridad | Fase | Estado |
-|---|---|---|---|
-| **Modelos principales** | 🔴 CRÍTICA | 4A | ⏳ Pendiente |
-| ├─ Notebook | CRÍTICA | 4A | ⏳ Pendiente |
-| ├─ Document | CRÍTICA | 4A | ⏳ Pendiente |
-| ├─ ChatMessage | CRÍTICA | 4A | ⏳ Pendiente |
-| ├─ Plan (suscripción) | CRÍTICA | 4A | ⏳ Pendiente |
-| └─ UserSubscription | CRÍTICA | 4A | ⏳ Pendiente |
-| **Endpoints CRUD** | 🔴 CRÍTICA | 4A | ⏳ Pendiente |
-| ├─ Notebooks (list, create, update, delete) | CRÍTICA | 4A | ⏳ Pendiente |
-| ├─ Documents (upload, list, delete) | CRÍTICA | 4B | ⏳ Pendiente |
-| └─ Chat messages (send, history, clear) | CRÍTICA | 4C | ⏳ Pendiente |
-| **Procesamiento de Archivos** | 🟠 ALTA | 4B | ⏳ Pendiente |
-| ├─ Upload (local storage) | ALTA | 4B | ⏳ Pendiente |
-| ├─ Text extraction (pytesseract, pdfplumber) | ALTA | 4B | ⏳ Pendiente |
-| └─ Markdown conversion | ALTA | 4B | ⏳ Pendiente |
-| **Integración Groq AI** | 🟠 ALTA | 4C | ⏳ Pendiente |
-| ├─ LLMService (Groq client) | ALTA | 4C | ⏳ Pendiente |
-| ├─ Contexto RAG (chunks + embeddings prep) | ALTA | 4C | ⏳ Pendiente |
-| └─ Token tracking | MEDIA | 4C | ⏳ Pendiente |
-| **Pagos & Suscripción** | 🟡 MEDIA | 5 | ❌ No iniciado |
-| ├─ Stripe integration | MEDIA | 5 | ❌ No iniciado |
-| └─ Plan validation | MEDIA | 5 | ❌ No iniciado |
-| **Frontend** | 🟡 MEDIA | 5-6 | ❌ No iniciado |
+### 4.4 Internacionalización (i18n) - FASE 7 ✅
+- `i18next v26.2.0` — Gestor de traducciones frontend
+- `react-i18next v17.0.8` — Integración con React 19
+- `i18next-browser-languagedetector v8.2.1` — Detección automática de idioma
+- Detección de idioma: localStorage → navigator language → default 'es'
+- 150+ claves de traducción en es.json + en.json
+- SettingsPage con selector de idioma + persistencia localStorage
+- Backend recibe `language` param en API chat, valida contra ['es', 'en']
+- Groq LLM recibe system prompt con instrucción de idioma explícita
+- Componentes actualizados: DocsPage, NotebookPage, LoginPage, RegisterPage, DashboardPage, SettingsPage
 
----
+### 4.5 Docker Containerization ✅
+- Backend: Python 3.12-slim, pip install --no-cache-dir
+- Frontend: Node 18-alpine, npm install --legacy-peer-deps
+- PostgreSQL 15 con servicio en puerto 5434
+- Django backend en puerto 8001
+- React/Vite frontend en puerto 5173
+- docker-compose.yml con 3 servicios coordin ados
 
-## 4. COMPARATIVA: OBJETIVO vs ACTUALMENTE IMPLEMENTADO
+### 4.6 Identificados y Pendientes
 
-### 4.1 Requisito 1: Carga y procesamiento de archivos
-
-| Requisito | Objetivo | Implementado | % |
-|---|---|---|---|
-| Recibir archivos | PDF, imágenes, Word, TXT | TXT solamente (MVP) | 20% |
-| OCR para extraer info | Sí, automático | Pendiente (Fase 4B) | 0% |
-| Conversión a Markdown | Sí, automático | Pendiente (Fase 4B) | 0% |
-
-**Impacto:** Este es el bloqueador principal para Fase 4A→4B
-
-### 4.2 Requisito 2: Generación de chat con IA
-
-| Requisito | Objetivo | Implementado | % |
-|---|---|---|---|
-| Chat después de procesar archivo | Sí | Modelos listos, endpoints no (Fase 4A) | 0% |
-| Preguntas sobre contenido | Sí | Pendiente (Fase 4C - Groq) | 0% |
-| IA usa solo info del archivo | Sí | Preparado para RAG (Fase 4C) | 0% |
-
-**Impacto:** Necesita Modelos (4A) → Procesamiento (4B) → IA (4C)
-
-### 4.3 Requisito 3: Registro y autenticación
-
-| Requisito | Objetivo | Implementado | % |
-|---|---|---|---|
-| Registro de usuarios | ✅ Sí | ✅ POST /auth/register/ | **100%** |
-| Login | ✅ Sí | ✅ POST /auth/login/ | **100%** |
-| Acceso a propios archivos | Sí | ✅ Permisos listos, falta CRUD | 50% |
-| Privacidad de datos | Sí | ✅ Queries filtran por user | **100%** |
-
-**Impacto:** Fase 1-3 cubrió esto. Fase 4 lo usa directamente.
-
-### 4.4 Requisito 4: Historial y almacenamiento
-
-| Requisito | Objetivo | Implementado | % |
-|---|---|---|---|
-| Guardar historial | Sí | Modelo `ChatMessage` definido (Fase 4A) | 0% |
-| Volver a chats anteriores | Sí | Endpoint planificado (Fase 4C) | 0% |
-| Contexto conversacional | Sí | Campos en modelo, lógica pendiente (Fase 4C) | 10% |
-
-**Impacto:** Bloqueado en Fase 4A (modelos)
-
-### 4.5 Requisito 5: Pasarela de pagos
-
-| Requisito | Objetivo | Implementado | % |
-|---|---|---|---|
-| Pasarela de pagos | Sí | Postergado a Fase 5 | 0% |
-| Control de suscripción | Sí | Modelos `Plan`, `UserSubscription` (Fase 4A) | 0% |
-| Plan limitado según tipo | Sí | Campos en modelo listos | 5% |
-
-**Impacto:** MVP no incluye, Fase 5 lo agrega.
+| Issue | Gravedad | Estado |
+|-------|----------|--------|
+| Gunicorn — Dockerfile usa `runserver` en vez de workers | 🔴 Crítica | ❌ Pendiente |
+| Async Groq — Llamada sincrónica bloquea workers | 🔴 Crítica | ❌ Pendiente |
+| OCR bloqueante — Sin Celery/background tasks | 🔴 Crítica | ❌ Pendiente |
+| `production.py` — Solo 9 líneas, sin HSTS/SSL | 🟡 Media | ❌ Pendiente |
+| Rate limiting en auth endpoints | 🟡 Media | ❌ Pendiente |
+| `DJANGO_SETTINGS_MODULE` hardcodeado a development | 🟡 Media | ❌ Pendiente |
+| `LLMServiceError` definido 2 veces en `llm_service.py` | 🟢 Baja | ❌ Pendiente |
+| Interactions app sigue siendo stub vacío | 🟢 Baja | ❌ Pendiente |
+| Sin streaming de respuestas IA | 🟢 Baja | ❌ Pendiente |
+| Sin caché Redis | 🟢 Baja | ❌ Pendiente |
 
 ---
 
-## 5. MATRIZ DE BLOQUEADORES
+## 5. COMPARATIVA: OBJETIVO vs IMPLEMENTADO
+
+### 5.1 Requisito 1: Carga y procesamiento de archivos
+
+| Requisito | Objetivo | Implementado | % |
+|-----------|----------|-------------|---|
+| Recibir archivos | PDF, imágenes, Word, TXT | ✅ PDF, TXT, DOCX, PNG, JPEG | **100%** |
+| OCR para info escaneada | Sí, automático | ✅ Tesseract (ES+EN) con fallback automático | **100%** |
+| Conversión a Markdown | Sí | ✅ Content + content_markdown | **100%** |
+| Validación de archivos | Límite de tamaño + tipos | ✅ 50MB + MIME validation | **100%** |
+
+### 5.2 Requisito 2: Generación de chat con IA
+
+| Requisito | Objetivo | Implementado | % |
+|-----------|----------|-------------|---|
+| Chat contextual por notebook | Sí | ✅ Aislamiento completo por notebook | **100%** |
+| Preguntas sobre documentos | Sí | ✅ RAG con top 5 documentos | **100%** |
+| Historial persistente | Sí | ✅ Últimos 10 mensajes como contexto | **100%** |
+| Streaming de respuestas | Opcional | ❌ Pendiente (Fase 7) | 0% |
+
+### 5.3 Requisito 3: Registro y autenticación
+
+| Requisito | Objetivo | Implementado | % |
+|-----------|----------|-------------|---|
+| Registro de usuarios | ✅ Sí | ✅ POST /auth/register/ + JWT | **100%** |
+| Login | ✅ Sí | ✅ POST /auth/login/ + tokens | **100%** |
+| Roles (Free/Premium/Admin) | Sí | ✅ subscription_tier + Plan + UserSubscription | **100%** |
+| Privacidad por usuario | Sí | ✅ Queries filtran por user en todos los endpoints | **100%** |
+
+### 5.4 Requisito 4: Historial y almacenamiento
+
+| Requisito | Objetivo | Implementado | % |
+|-----------|----------|-------------|---|
+| Guardar historial | Sí | ✅ ChatMessage con user + notebook + tokens | **100%** |
+| Volver a chats anteriores | Sí | ✅ GET /chat/history/?notebook=... | **100%** |
+| Sistema de interacciones (tracking) | CLAVE | ⏳ Stub sin implementar | 10% |
+
+### 5.5 Requisito 5: Pasarela de pagos
+
+| Requisito | Objetivo | Implementado | % |
+|-----------|----------|-------------|---|
+| Stripe integration | Sí | ❌ Postergado a Fase 7 | 0% |
+| Control de suscripción | Sí | ✅ Modelos Plan + UserSubscription listos | 50% |
+| Límites según plan | Sí | ⏳ Modelos definidos, lógica sin implementar | 30% |
+
+---
+
+## 6. MATRIZ DE DEPENDENCIAS
 
 ```
-Fase 4A (Modelos) → CRÍTICA
-    ↓ (no se puede iniciar 4B sin esto)
-    
-Fase 4B (Procesamiento archivos) → CRÍTICA
-    ↓ (no se puede iniciar 4C sin esto)
-    
-Fase 4C (Chat + Groq IA) → CRÍTICA
-    ↓ (Frontend no puede funcionar sin esta)
-    
-Fase 5 (Pagos) → IMPORTANTE (pero no bloquea MVP)
+Fase 1 (Scaffold)      → ✅ COMPLETADO
     ↓
-    
-Fase 6+ (Features avanzadas) → FUTURO
+Fase 2 (Modelos)       → ✅ COMPLETADO
+    ↓
+Fase 3 (Auth)          → ✅ COMPLETADO
+    ↓
+Fase 4A (Modelos Core) → ✅ COMPLETADO
+    ↓
+Fase 4B (File Proc)    → ✅ COMPLETADO (depende de 4A)
+    ↓
+Fase 4C (Chat + Groq)  → ✅ COMPLETADO (depende de 4A+4B)
+    ↓
+Fase 5 (Frontend)      → ✅ COMPLETADO (depende de 4A+4B+4C)
+    ↓
+Fase 6 (Mejoras)       → 🔄 EN PROGRESO
+    ↓
+Fase 7 (Pagos + Prod)  → ❌ NO INICIADO
 ```
 
 ---
 
-## 6. PRÓXIMOS PASOS (PLAN DE ACCIÓN)
+## 7. PRÓXIMOS PASOS
 
-### Inmediato (Esta sesión o próxima)
+### ✅ COMPLETADO - Fase 7 (Internacionalización)
+- ✅ i18next infrastructure setup (browser detection + localStorage)
+- ✅ 150+ translation keys (Spanish + English)
+- ✅ Settings page language selector with state management
+- ✅ Backend language parameter integration with Groq LLM
+- ✅ Docker services running (PostgreSQL 15, Django, React/Vite)
+- ✅ Language-aware system prompts for LLM
 
-**FASE 4A - Modelos + Suscripción (Semana 1)**
-- [ ] **ADR/Decisión:** Estructuras de Document - Simple vs Robusto (opciones en `10_fase4_arquitectura_detallada.md`)
-- [ ] Crear modelos:
-  - [ ] `Notebook` (contenedor de documentos)
-  - [ ] `Document` (archivo + contenido)
-  - [ ] `ChatMessage` (conversa histórica)
-  - [ ] `Plan` (planes de suscripción)
-  - [ ] `UserSubscription` (relación user-plan)
-- [ ] Migraciones: `makemigrations` + `migrate`
-- [ ] Admin customizado para cada modelo
-- [ ] Tests: mínimo 20+ tests
-- [ ] Endpoints CRUD básicos (sin lógica IA aún)
+### Inmediato (Prioridad Alta - Post Fase 7)
+- [ ] Fine-tune i18n on additional pages (HelpPage, ComingSoonPage)
+- [ ] Test language switching with Docker Compose
+- [ ] Gunicorn + workers en Dockerfile (reemplazar `runserver`)
+- [ ] Async views para Groq API (no bloquear workers)
+- [ ] Celery + Redis para OCR background
 
-**Duración estimada:** 3-5 días
+### Corto Plazo (Prioridad Media)
+- [ ] Completar `production.py` con HSTS, SSL, seguridad
+- [ ] Rate limiting en endpoints de auth
+- [ ] Variable `DJANGO_SETTINGS_MODULE` dinámica (no hardcodeada)
+- [ ] Arreglar `LLMServiceError` duplicado en `llm_service.py`
+- [ ] Cache con Redis
 
-### Corto plazo (Próxima 1-2 semanas)
+### Mediano Plazo (Prioridad Baja)
+- [ ] Implementar sistema de Interacciones (tracking completo)
+- [ ] Streaming de respuestas IA
+- [ ] Enforce límites de plan (documentos/mensajes)
+- [ ] Multi-stage Docker build + nginx reverse proxy
+- [ ] Monitoreo y analytics
 
-**FASE 4B - Procesamiento de Archivos**
-- [ ] Instalar dependencias: `pytesseract`, `pdfplumber`, `Pillow`, `markdown`
-- [ ] Service: `PDFProcessorService` (extract text)
-- [ ] Endpoint: `POST /documents/upload/`
-- [ ] Conversión a Markdown
-- [ ] Tests: file upload, extraction quality
-
-**Duración estimada:** 3-5 días
-
-### Mediano plazo (Próxima 2-3 semanas)
-
-**FASE 4C - Chat + Groq IA**
-- [ ] Instalar Groq SDK
-- [ ] Service: `LLMService` (Groq integration)
-- [ ] RAG prep: chunking de documentos
-- [ ] Endpoint: `POST /chat/send_message/`
-- [ ] Token tracking
-- [ ] Tests: chat con contexto
-
-**Duración estimada:** 3-5 días
+### Futuro (Fase 8+)
+- [ ] Stripe integration + pagos
+- [ ] RAG avanzado con vectores embeddings
+- [ ] Colaboración en tiempo real
+- [ ] Deploy producción completo
+- [ ] WebSocket support para real-time chat
 
 ---
 
-## 7. RIESGOS Y CONSIDERACIONES
+## 8. MÉTRICAS CLAVE
+
+| Métrica | Valor |
+|---------|-------|
+| Tests backend | 57+ pasando |
+| Componentes frontend | 32+ |
+| Apps Django | 6 (users, notebooks, documents, chat, interactions, core) |
+| Endpoints API | 15+ |
+| Modelos de datos | 8 (User, UserProfile, Plan, UserSubscription, Notebook, Document, ChatMessage, UserLLMSettings) |
+| Formatos archivo soportados | 5 (PDF, TXT, DOCX, PNG, JPEG) |
+| Tiempo estimado desarrollo | ~6-8 semanas |
+| Estado actual | MVP Fase 5 completado |
+
+---
+
+## 9. RIESGOS ACTIVOS
 
 | Riesgo | Probabilidad | Impacto | Mitigación |
-|---|---|---|---|
-| OCR con pobre calidad | Media | Alto | Probar pytesseract + Tesseract OCR engine |
-| Groq API rate limiting | Media | Medio | Implementar queue + retry logic |
-| Storage local crece mucho | Baja | Medio | Migrar a S3 en Fase 5 |
-| Modelos Document mal diseñados | Media | Alto | **Decidir arquitectura ANTES de codear** |
+|--------|-------------|---------|------------|
+| Sin Gunicorn en producción | Alta | Crítico | Implementar antes de cualquier deploy |
+| OCR bloquea request | Alta | Alto | Mover a Celery + Redis |
+| Groq API rate limiting | Media | Medio | Implementar retry + queue |
+| Sin enforcement de planes | Media | Medio | Implementar validación en views |
 
 ---
 
-## 8. MÉTRICAS DE ÉXITO - FASE 4 COMPLETA
-
-- ✅ Usuario sube documento (TXT/PDF) → guarda en BD
-- ✅ Usuario chatea → IA responde con contexto del documento
-- ✅ Historial persiste → user puede volver a chat anterior
-- ✅ 50+ tests pasando
-- ✅ `python manage.py check` sin errores
-- ✅ API contracts documentados
-- ✅ Admin panel permite gestionar todo
-
----
-
-## 9. RECOMENDACIONES PARA PRÓXIMA SESIÓN
-
-1. **EMPEZAR por decisión:** ¿Simple o Robusto para Document? (Lee `10_fase4_arquitectura_detallada.md`)
-2. **LEER:** `.instructions.md` (archivo de reglas para Copilot)
-3. **VALIDAR:** Que tracking_plan.md está actualizado
-4. **ENTONCES:** Proceder con Fase 4A en paralelo (modelos + tests + admin)
-
----
-
-**Preparado por:** GitHub Copilot  
-**Para:** Próximas sesiones de desarrollo
+**Actualizado por:** opencode  
+**Fecha:** 11 de mayo de 2026  
+**Base:** README.md + análisis de código fuente

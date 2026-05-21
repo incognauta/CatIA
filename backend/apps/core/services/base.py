@@ -28,6 +28,7 @@ class LLMServiceBase(ABC):
         model_override: Optional[str] = None,
         temperature_override: Optional[float] = None,
         max_tokens_override: Optional[int] = None,
+        language: str = 'es',
     ) -> Dict:
         """
         Generar respuesta con contexto RAG
@@ -41,6 +42,7 @@ class LLMServiceBase(ABC):
             model_override: Sobrescribir modelo
             temperature_override: Sobrescribir temperatura
             max_tokens_override: Sobrescribir max tokens
+            language: Idioma de la respuesta ('es' o 'en')
         
         Returns:
             Dict con 'response' y 'tokens_used'

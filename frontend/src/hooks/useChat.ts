@@ -1,11 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { chatAPI } from '@api/chat'
 import { useChatStore } from '@stores/chatStore'
 import type { ChatMessage } from '@types/index'
 
 export const useChat = (notebookId: string) => {
   const queryClient = useQueryClient()
+  const { i18n } = useTranslation()
   const messages = useChatStore((state) => state.messages)
   const messagesByNotebook = useChatStore((state) => state.messagesByNotebook)
   const setCurrentNotebook = useChatStore((state) => state.setCurrentNotebook)
@@ -48,8 +50,8 @@ export const useChat = (notebookId: string) => {
         return Promise.reject(new Error('Notebook ID is required'))
       }
       setLoading(true)
-      console.log('Sending message to AI:', { notebookId, message, systemPrompt })
-      return chatAPI.askAI(notebookId, message, systemPrompt)
+      console.log('Sending message to AI:', { notebookId, message, systemPrompt, language: i18n.language })
+      return chatAPI.askAI(notebookId, message, systemPrompt, i18n.language)
     },
     onSuccess: (response) => {
       console.log('AI response received:', response.data)

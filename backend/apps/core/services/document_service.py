@@ -128,9 +128,65 @@ class DjangoDocumentUploadService(DocumentUploadServiceBase):
         
         logger.info(f"Documento creado: {document.id} - {document.title}")
         
-        # 6. Retornar documento serializado
+        # 6. Generar chunks + embeddings para búsqueda semántica
+        try:
+            self._create_embeddings(document)
+        except Exception as e:
+            logger.warning(f"Error generando embeddings (no crítico): {e}")
+        
+        # 7. Retornar documento serializado
         serializer = DocumentSerializer(document)
         return serializer.data
+    
+    def _create_embeddings(self, document):
+        """
+        Dividir documento en chunks y generar embeddings.
+        """
+        from apps.documents.models import DocumentChunk
+        from .rag_semantic_service import SemanticRAGService
+        from .embedding_service import get_embedding_service
+
+        content = document.content or ''
+        if not content.strip():
+            return
+
+        rag = SemanticRAGService()
+        emb = get_embedding_service()
+
+        chunks = rag._split_text(content)
+        if not chunks:
+            return
+
+        texts_to_embed = []
+        chunk_objs = []
+
+        for i, chunk_text in enumerate(chunks):
+            if not chunk_text.strip():
+                continue
+            chunk = DocumentChunk(
+                document=document,
+                chunk_index=i,
+                content=chunk_text,
+            )
+            chunk_objs.append(chunk)
+            texts_to_embed.append(chunk_text)
+
+        if not chunk_objs:
+            return
+
+        # Generar embeddings en batch
+        vectors = emb.encode_batch(texts_to_embed)
+
+        # Asignar vectores
+        for chunk, vector in zip(chunk_objs, vectors):
+            chunk.embedding = vector
+
+        # Guardar en DB
+        DocumentChunk.objects.bulk_create(chunk_objs)
+        logger.info(
+            f"Embeddings generados: {len(chunk_objs)} chunks "
+            f"para documento {document.id}"
+        )
     
     def validate_file(self, uploaded_file) -> tuple[bool, str]:
         """

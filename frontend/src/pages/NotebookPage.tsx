@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useNotebook } from '@hooks/useNotebooks'
 import { useChat } from '@hooks/useChat'
@@ -12,6 +13,7 @@ import { ChatSettings } from '@components/chat/ChatSettings'
 import DocumentsModal from '@components/documents/DocumentsModal'
 
 export default function NotebookPage() {
+  const { t } = useTranslation()
   const { notebookId } = useParams<{ notebookId: string }>()
   const navigate = useNavigate()
   const { data: notebook, isLoading } = useNotebook(notebookId || '')
@@ -49,11 +51,11 @@ export default function NotebookPage() {
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Cargando...</div>
+    return <div className="flex items-center justify-center h-full">{t('common.loading')}</div>
   }
 
   if (!notebook) {
-    return <div className="flex items-center justify-center h-full">Notebook no encontrado</div>
+    return <div className="flex items-center justify-center h-full">{t('docs.notFound')}</div>
   }
 
   return (

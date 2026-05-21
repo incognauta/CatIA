@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useNotebooks } from '@hooks/useNotebooks'
 import { Plus, Loader } from 'lucide-react'
 
 export default function DashboardPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { notebooks, isLoading, createNotebook, isCreating } = useNotebooks()
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -28,8 +30,8 @@ export default function DashboardPage() {
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-catia-light mb-2">Mis Notebooks</h1>
-        <p className="text-catia-light/60">Organiza y gestiona tus documentos</p>
+        <h1 className="text-3xl font-bold text-catia-light mb-2">{t('notebooks.myNotebooks')}</h1>
+        <p className="text-catia-light/60">{t('notebooks.subtitle')}</p>
       </div>
 
       {/* Create Form */}
@@ -40,7 +42,7 @@ export default function DashboardPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nombre del notebook..."
+              placeholder={t('notebooks.nameNotebook')}
               className="flex-1 bg-catia-dark/50 border border-catia-purple/30 rounded-lg px-4 py-2 text-catia-light placeholder:text-catia-light/40 focus:outline-none focus:border-catia-purple"
             />
             <button
@@ -49,14 +51,14 @@ export default function DashboardPage() {
               className="bg-catia-purple hover:bg-catia-purple/80 text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50 flex items-center gap-2"
             >
               {isCreating && <Loader className="w-4 h-4 animate-spin" />}
-              Crear
+              {t('notebooks.create')}
             </button>
             <button
               type="button"
               onClick={() => setShowCreateForm(false)}
               className="bg-catia-dark/50 border border-catia-purple/30 text-catia-light px-6 py-2 rounded-lg hover:bg-catia-dark transition-colors"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
           </form>
         </div>
@@ -72,7 +74,7 @@ export default function DashboardPage() {
           >
             <div className="flex flex-col items-center gap-4">
               <Plus className="w-12 h-12 text-catia-gold group-hover:scale-110 transition-transform" />
-              <p className="text-catia-light/70 font-semibold">Crear Notebook</p>
+              <p className="text-catia-light/70 font-semibold">{t('notebooks.create')}</p>
             </div>
           </button>
         )}
@@ -84,7 +86,7 @@ export default function DashboardPage() {
           </div>
         ) : notebooks.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-catia-light/60">No tienes notebooks aún</p>
+            <p className="text-catia-light/60">{t('notebooks.noNotebooks')}</p>
           </div>
         ) : (
           notebooks.map((notebook) => (
@@ -97,7 +99,7 @@ export default function DashboardPage() {
                 {notebook.name}
               </h3>
               <p className="text-sm text-catia-light/60 mt-2">
-                {notebook.documents_count || 0} documentos
+                {notebook.documents_count || 0} {t('docs.documents')}
               </p>
               <p className="text-xs text-catia-light/40 mt-1">
                 {notebook.messages_count || 0} mensajes
