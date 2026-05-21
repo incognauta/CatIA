@@ -148,4 +148,3 @@ htmlcov/
 dist/
 build/
 *.egg-info/
-docs/
