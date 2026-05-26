@@ -2,8 +2,6 @@
 
 > **Fase 7 Completada: Aplicación lista para presentación** 🎉
 >
-> ⭐ **[Ver Checklist de Presentación](docs/PRESENTATION_CHECKLIST.md)** para demostración paso a paso
->
 > Documentación del estado actual: [ESTADO_PROYECTO.md](docs/ESTADO_PROYECTO.md)
 
 Full-stack application for intelligent document analysis with AI-powered chat. Built with **Django 5.0 + DRF**, **React 19 + TypeScript**, **Groq API**, and **i18next for internationalization**.
@@ -458,6 +456,41 @@ PDF_IA_Rework/
 
 ---
 
+---
+
+## 🚀 Deployment
+
+### Quick Deploy to Render
+
+Deploy to production with **CI/CD in 5 minutes**:
+
+1. **Push to GitHub**
+   ```bash
+   git add . && git commit -m "deploy: ready for render" && git push origin main
+   ```
+
+2. **Connect to Render**
+   - Create account at https://render.com (free)
+   - Connect GitHub repository
+   - Follow [docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md) for step-by-step guide
+
+3. **Automatic CI/CD**
+   - Every push to `main` triggers automatic deploy
+   - Services live in ~3-5 minutes
+
+**📚 Documentation:**
+- **[docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md)** — Complete guide with screenshots
+- [docs/RENDER_ENV_REFERENCE.md](docs/RENDER_ENV_REFERENCE.md) — Environment variables
+- [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md) — Pre-deployment checklist
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — All deployment options (AWS, Docker, K8s, etc.)
+
+**Result:**
+- Frontend: `https://catia-frontend.onrender.com`
+- Backend API: `https://catia-backend.onrender.com/api/v1`
+- Database: PostgreSQL on Render
+
+---
+
 ## 📋 Current Status
 
 ### ✅ Completed (Fase 5 → 7)
@@ -520,8 +553,11 @@ PDF_IA_Rework/
 
 | Document | Purpose |
 |----------|---------|
-| [PRESENTATION_CHECKLIST.md](docs/PRESENTATION_CHECKLIST.md) | **⭐ Start here for demo** — Step-by-step guide for presentation |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deployment options (Docker, Render, AWS, K8s) |
+| **[docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md)** | ⭐ **Deploy to production in 5 min** — Step-by-step for Render with CI/CD |
+| [docs/RENDER_ENV_REFERENCE.md](docs/RENDER_ENV_REFERENCE.md) | Environment variables for Render deployment |
+| [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md) | Pre-deployment verification checklist |
+| [PRESENTATION_CHECKLIST.md](docs/PRESENTATION_CHECKLIST.md) | Demo guide — Step-by-step for presentations |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | All deployment options (Docker, AWS, K8s, etc.) |
 | [ESTADO_PROYECTO.md](docs/ESTADO_PROYECTO.md) | Project status and completion by phase |
 | [ARCHITECTURE_DIAGRAMS.md](docs/ARCHITECTURE_DIAGRAMS.md) | System architecture diagrams |
 | [docs/Progreso/](docs/Progreso/) | Detailed phase-by-phase implementation notes |

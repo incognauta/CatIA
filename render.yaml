@@ -1,0 +1,54 @@
+services:
+  # Backend Django
+  - type: web
+    name: catia-backend
+    env: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py migrate --noinput
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 30
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        scope: project
+      - key: SECRET_KEY
+        scope: project
+      - key: DATABASE_URL
+        scope: project
+      - key: GROQ_API_KEY
+        scope: project
+      - key: CORS_ALLOWED_ORIGINS
+        scope: project
+    routes:
+      - type: http
+        path: /api
+    healthCheckPath: /api/v1/health/
+    
+  # Frontend React
+  - type: web
+    name: catia-frontend
+    env: node
+    plan: free
+    buildCommand: |
+      npm install --legacy-peer-deps
+      npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: VITE_API_URL
+        value: https://catia-backend.onrender.com/api/v1
+    routes:
+      - type: http
+        path: /
+
+  # PostgreSQL Database
+  - type: pserv
+    name: catia-db
+    plan: free
+    ipAllowList: []
